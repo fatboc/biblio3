@@ -7,8 +7,8 @@ int create_menu(WINDOW * window, vector<string> &list_choices, string header, bo
 	ITEM **menu_items, **list_items;
 	MENU *menu, *lista, *current_menu;
 	bool upper_active = false;
-	int n = list_choices.size(), res = -1, c, shifty, shiftx=1;
-	int height = LINES-4, width = COLS-10, starty = (LINES-height)/2, startx = (COLS-width)/2;
+	int n = list_choices.size(), res = -1, c, shifty, shiftx=5;
+	int height = LINES-4, width = COLS-2, starty = (LINES-height)/2, startx = (COLS-width)/2;
 	char tmp[n][256];
 
 	init_pair(1, COLOR_WHITE, COLOR_BLUE);
@@ -19,7 +19,7 @@ int create_menu(WINDOW * window, vector<string> &list_choices, string header, bo
 
     wclear(window);
 //	wbkgd(stdscr, COLOR_PAIR(3));
-	wbkgd(window, COLOR_PAIR(1));
+	wbkgd(window, COLOR_PAIR(4));
 	box(window, 0, 0);
 	keypad(window, TRUE);
 
@@ -48,11 +48,12 @@ int create_menu(WINDOW * window, vector<string> &list_choices, string header, bo
 	else
 		shifty=2;
 	list_window = subwin(window, height-shifty, width-shiftx, starty+shifty, startx+(shiftx/2));
+	//keypad(list_window, TRUE);
 	set_menu_win(lista, list_window);
 	set_menu_sub(lista, list_window);
 
-	set_menu_back(lista, COLOR_PAIR(1));
-	set_menu_fore(lista, COLOR_PAIR(4));
+	set_menu_back(lista, COLOR_PAIR(4));
+	set_menu_fore(lista, COLOR_PAIR(2));
 	set_menu_mark(lista, " ");
 
 	refresh();
@@ -71,12 +72,13 @@ int create_menu(WINDOW * window, vector<string> &list_choices, string header, bo
 
 		menu = new_menu(menu_items);
 		menu_window = subwin(window, 1, width, starty+1, startx);
+		//keypad(menu_window, TRUE);
 		set_menu_win(menu, menu_window);
 		set_menu_sub(menu, menu_window);
 
-		wbkgd(menu_window, COLOR_PAIR(2));
-		set_menu_back(menu, COLOR_PAIR(2));
-		set_menu_fore(menu, COLOR_PAIR(2));
+		wbkgd(menu_window, COLOR_PAIR(1));
+		set_menu_back(menu, COLOR_PAIR(1));
+		set_menu_fore(menu, COLOR_PAIR(1));
 		set_menu_format(menu, 1, 5);
 		set_menu_mark(menu, "  ");
 		set_menu_spacing(menu, 0, 0, 3);
@@ -129,14 +131,14 @@ int create_menu(WINDOW * window, vector<string> &list_choices, string header, bo
                     {
                         set_menu_fore(menu, COLOR_PAIR(2));
                         wrefresh(menu_window);
-                        set_menu_fore(lista, COLOR_PAIR(4));
+                        set_menu_fore(lista, COLOR_PAIR(5));
                         wrefresh(list_window);
                     }
                     else
                     {
-                        set_menu_fore(menu, COLOR_PAIR(5));
+                        set_menu_fore(menu, COLOR_PAIR(1));
                         wrefresh(menu_window);
-                        set_menu_fore(lista, COLOR_PAIR(5));
+                        set_menu_fore(lista, COLOR_PAIR(2));
                         wrefresh(list_window);
                     }
                     upper_active = !upper_active;
@@ -257,7 +259,7 @@ int init()
     if(!initscr())
         return -1;
     start_color();
-    raw();
+    cbreak();
     noecho();
     curs_set(0);
     keypad(stdscr, TRUE);
@@ -517,13 +519,13 @@ int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*
 
     vector<string> list_choices;
     for (int i=0; i<ksiazki.size(); i++)
-        list_choices.push_back(kategorie[i]->nazwa);
+        list_choices.push_back(ksiazki[i]->tytul);
 
     vector<string> menu_choices {"Edytuj", "Usun", "Wroc"};
 
     int res, x=-1, check;
 
-    res = create_menu(window, list_choices, "Kategorie", true);
+    res = create_menu(window, list_choices, "Ksiazki", true);
     /*char ** list_choices = book_choices(ksiazki);
     char * fields[] = {"Autor", "Tytul", "Rok wydania"};
     int result, x=-1, check;
