@@ -33,6 +33,8 @@ struct Ksiazka
     void modify(vector<string>& data);
     size_t find_text (string text);
     bool check();
+    void item_export(ostream &out);
+    string new_choice();
 };
 
 struct Klient
@@ -48,6 +50,8 @@ struct Klient
     void modify(vector<string>& data);
     size_t find_text(string text);
     bool check();
+    void item_export(ostream &out);
+    string new_choice();
 };
 
 struct Kategoria
@@ -61,16 +65,18 @@ struct Kategoria
     void modify(vector<string>& data);
     size_t find_text(string text);
     bool check();
-
+    void item_export(ostream &out);
+    string new_choice();
 };
 
 //user.cpp
 
-int create_menu(WINDOW *, vector<string> &, string, bool);
+int create_menu(WINDOW *, vector<string> &, string, string, bool);
 int dialog(vector<string> &, string, string);
 int find_longest(vector<string> &);
 int init();
 int menu_main(WINDOW* window, vector<Kategoria*> &kategorie, vector<Ksiazka*>& ksiazki, vector<Klient*> &klienci);
+void zapisz(vector<Kategoria*> &kategorie, vector<Ksiazka*> &ksiazki, vector<Klient*> &klienci);
 
 //data.cpp
 
@@ -81,3 +87,5 @@ void add_category(vector<Kategoria*> &kategorie, vector<string> &data);
 int menu_kategorie(WINDOW * window, vector <Kategoria*>& kategorie);
 int menu_klienci(WINDOW * window, vector <Klient*> &klienci);
 int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*> &kategorie, vector <Klient*> klienci);
+int data_export(vector<Kategoria*> &kategorie, vector<Ksiazka*> &ksiazki, vector<Klient*> &klienci);
+void cleanup(WINDOW *window, vector<Kategoria*> &kategorie, vector<Klient*> &klienci, vector<Ksiazka*> &ksiazki);

@@ -44,6 +44,7 @@ int data_import(vector <Kategoria*> &kategorie, vector <Klient*> &klienci, vecto
         (stringstream)tmp >> m;
         if (m>=0)
         {
+            m = find_id(kategorie, m);
             new_book->kat = kategorie[m];
             kategorie[m]->nalezace.push_back(new_book);
         }
@@ -237,4 +238,156 @@ void add_category(vector<Kategoria*> &kategorie, vector<string> &data)
     new_category->modify(data);
 
     kategorie.push_back(new_category);
+}
+
+void Kategoria::item_export(ostream& out)
+{
+    out << nazwa << endl;
+    out << symbol << endl;
+    out << id << endl;
+    out << endl;
+}
+
+void Klient::item_export(ostream &out)
+{
+    out << imie << endl;
+    out << nazwisko << endl;
+    out << id << endl;
+    out << telefon << endl;
+    out << adres << endl;
+    out << pozyczone.size() << endl;
+    int j=0;
+    for (vector<Ksiazka*>::iterator i=pozyczone.begin(); i!=pozyczone.end(); i++, j++)
+    {
+        out << pozyczone[j]->id << endl;
+        out << pozyczone[j]->pozyczona << endl;
+    }
+
+    out << endl;
+}
+
+void Ksiazka::item_export(ostream &out)
+{
+    out << tytul << endl;
+    out << autor << endl;
+    out << id << endl;
+    out << rok_wydania << endl;
+    out << kat->id << endl;
+    out << endl;
+}
+
+int data_export(vector<Kategoria*> &kategorie, vector<Ksiazka*> &ksiazki, vector<Klient*> &klienci)
+{
+    ofstream out1("kategorie");
+    ofstream out2("ksiazki");
+    ofstream out3("klienci");
+
+    int j=0;
+
+    try
+    {
+        if (!out1.is_open()) throw -1;
+        if (!out2.is_open()) throw -2;
+        if (!out3.is_open()) throw -3;
+    }
+    catch (int ex)
+    {
+        return ex;
+    }
+
+    for (vector<Kategoria*>::iterator i=kategorie.begin(); i!=kategorie.end(); i++, j++)
+    {
+        kategorie[j]->item_export(out1);
+    }
+    out1.close();
+
+    j=0;
+    for (vector<Ksiazka*>::iterator i=ksiazki.begin(); i!=ksiazki.end(); i++, j++)
+    {
+        ksiazki[j]->item_export(out2);
+    }
+    out2.close();
+
+    j=0;
+    for (vector<Klient*>::iterator i=klienci.begin(); i!=klienci.end(); i++, j++)
+    {
+        klienci[j]->item_export(out3);
+    }
+    out3.close();
+
+    return 0;
+}
+
+string Kategoria::new_choice()
+{
+    string choice = "", tmp;
+
+    tmp = to_string(id);
+    tmp.resize(4, ' ');
+    choice+=tmp;
+    choice+=" ";
+
+    tmp = symbol;
+    tmp.resize(7, ' ');
+    choice+=tmp;
+    choice+=" ";
+
+    tmp = nazwa;
+    tmp.resize(COLS-choice.length()-4, ' ');
+    choice+=tmp;
+
+    return(choice);
+}
+
+string Ksiazka::new_choice()
+{
+    string choice = "", tmp;
+
+    tmp = to_string(id);
+    tmp.resize(4, ' ');
+    choice+=tmp;
+    choice+=" ";
+
+    tmp = autor;
+    tmp.resize(20, ' ');
+    choice+=tmp;
+    choice+=" ";
+
+    tmp = tytul;
+    tmp.resize(COLS-choice.length()-4, ' ');
+    choice+=tmp;
+
+    return(choice);
+}
+
+string Klient::new_choice()
+{
+    string choice = "", tmp;
+
+    tmp = to_string(id);
+    tmp.resize(4, ' ');
+    choice+=tmp;
+    choice+=" ";
+
+    tmp = imie;
+    tmp.resize(20, ' ');
+    choice+=tmp;
+    choice+=" ";
+
+    tmp = nazwisko;
+    tmp.resize(COLS-choice.length()-4, ' ');
+    choice+=tmp;
+
+    return(choice);
+}
+
+void cleanup(WINDOW *window, vector<Kategoria*> &kategorie, vector<Klient*> &klienci, vector<Ksiazka*> &ksiazki)
+{
+    delwin(window);
+
+    delete_all(kategorie);
+    delete_all(klienci);
+    delete_all(ksiazki);
+
+    endwin();
 }

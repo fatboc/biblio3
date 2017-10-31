@@ -23,8 +23,7 @@ int main()
 
     menu_main(window, kategorie, ksiazki, klienci);
 
-    delwin(window);
-    endwin();
+    cleanup(window, kategorie, klienci, ksiazki);
 
     return 0;
 }

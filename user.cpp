@@ -1,14 +1,14 @@
 #include "header.hpp"
 
-int create_menu(WINDOW * window, vector<string> &list_choices, string header, bool upper_present)
+int create_menu(WINDOW * window, vector<string> &list_choices, string header, string guide, bool upper_present)
 //generowanie dowolnego menu
 {
 	WINDOW *menu_window, *list_window, *current_window;
 	ITEM **menu_items, **list_items;
 	MENU *menu, *lista, *current_menu;
 	bool upper_active = false;
-	int n = list_choices.size(), res = -1, c, shifty, shiftx=5;
-	int height = LINES-4, width = COLS-2, starty = (LINES-height)/2, startx = (COLS-width)/2;
+	int n = list_choices.size(), res = -1, c, j;
+	int height = LINES-4, width = COLS-2, starty = (LINES-height)/2, startx = (COLS-width)/2, shifty, shiftx=5;
 	char tmp[n][256];
 
 	init_pair(1, COLOR_WHITE, COLOR_BLUE);
@@ -18,7 +18,6 @@ int create_menu(WINDOW * window, vector<string> &list_choices, string header, bo
 	init_pair(5, COLOR_BLACK, COLOR_WHITE);
 
     wclear(window);
-//	wbkgd(stdscr, COLOR_PAIR(3));
 	wbkgd(window, COLOR_PAIR(4));
 	box(window, 0, 0);
 	keypad(window, TRUE);
@@ -28,9 +27,15 @@ int create_menu(WINDOW * window, vector<string> &list_choices, string header, bo
     mvwprintw(window, 1, (COLS-len)/2,"%s", header.c_str());
     wattroff(window, A_BOLD);
 
-    mvwaddch(window, 2, 0, ACS_LTEE);
-    mvwhline(window, 2, 1, ACS_HLINE, COLS-2);
-    mvwaddch(window, 2, COLS - 1, ACS_RTEE);
+    if(!upper_present)
+    {
+        mvwaddch(window, 2, 0, ACS_LTEE);
+        mvwhline(window, 2, 1, ACS_HLINE, COLS-2);
+        mvwaddch(window, 2, COLS - 1, ACS_RTEE);
+    }
+
+    if (guide.length()!=0)
+        mvwprintw(window, 4, 4, "%s", guide.c_str());
 
 //menu listy
 	list_items = (ITEM**)calloc(n+1, sizeof(ITEM*));
@@ -43,12 +48,12 @@ int create_menu(WINDOW * window, vector<string> &list_choices, string header, bo
 
 	lista = new_menu(list_items);
 
-	if(upper_present)
-		shifty=3;
-	else
-		shifty=2;
+    if(guide.length()==0)
+        shifty = 2;
+    else
+        shifty = 4;
+
 	list_window = subwin(window, height-shifty, width-shiftx, starty+shifty, startx+(shiftx/2));
-	//keypad(list_window, TRUE);
 	set_menu_win(lista, list_window);
 	set_menu_sub(lista, list_window);
 
@@ -62,16 +67,18 @@ int create_menu(WINDOW * window, vector<string> &list_choices, string header, bo
 //gorne menu
 	if(upper_present){
 		vector<string> menu_choices {"Szukaj", "Sortuj", "Filtruj", "Nowy", "Wroc"};
+		j = menu_choices.size();
 
-		menu_items = (ITEM**)calloc(6, sizeof(ITEM*));
-		for (int i=0; i<5; i++)
+		menu_items = (ITEM**)calloc(j+1, sizeof(ITEM*));
+		for (int i=0; i<j; i++)
 		{
 			menu_items[i] = new_item(menu_choices[i].c_str(), "");
 		}
-		menu_items[5] = (ITEM*)NULL;
+		menu_items[j] = (ITEM*)NULL;
 
 		menu = new_menu(menu_items);
-		menu_window = subwin(window, 1, width, starty+1, startx);
+
+		menu_window = subwin(window, 1, width, starty, startx);
 		//keypad(menu_window, TRUE);
 		set_menu_win(menu, menu_window);
 		set_menu_sub(menu, menu_window);
@@ -92,7 +99,7 @@ int create_menu(WINDOW * window, vector<string> &list_choices, string header, bo
     current_window = list_window;
 
 //sterowanie
-	while((c = wgetch(window))!=KEY_F(1)&&res==-1)
+	while((c = wgetch(window))!=KEY_F(1))
 	{
 		if(upper_active)
 		{
@@ -129,16 +136,16 @@ int create_menu(WINDOW * window, vector<string> &list_choices, string header, bo
                 {
                     if(upper_active)
                     {
-                        set_menu_fore(menu, COLOR_PAIR(2));
+                        set_menu_fore(menu, COLOR_PAIR(1));
                         wrefresh(menu_window);
-                        set_menu_fore(lista, COLOR_PAIR(5));
+                        set_menu_fore(lista, COLOR_PAIR(2));
                         wrefresh(list_window);
                     }
                     else
                     {
-                        set_menu_fore(menu, COLOR_PAIR(1));
+                        set_menu_fore(menu, COLOR_PAIR(2));
                         wrefresh(menu_window);
-                        set_menu_fore(lista, COLOR_PAIR(2));
+                        set_menu_fore(lista, COLOR_PAIR(5));
                         wrefresh(list_window);
                     }
                     upper_active = !upper_active;
@@ -150,11 +157,12 @@ int create_menu(WINDOW * window, vector<string> &list_choices, string header, bo
                 break;
 		}
 		wrefresh(current_window);
+		if (res!=-1) break;
 	}
 	if (upper_present)
 	{
-        for (int i=0; i<5; i++)
-        free_item(menu_items[i]);
+        for (int i=0; i<j+1; i++)
+            free_item(menu_items[i]);
 
         free_menu(menu);
 	}
@@ -269,8 +277,8 @@ int init()
 
 int menu_main(WINDOW* window, vector<Kategoria*> &kategorie, vector<Ksiazka*>& ksiazki, vector<Klient*> &klienci)
 {
-    vector<string> opcje {"Ksiazki", "Klienci", "Kategorie"};
-    int res = create_menu(window, opcje, "MENU", false);
+    vector<string> opcje {"Przegladaj ksiazki", "Przegladaj klientow", "Przegladaj kategorie", "Zapisz", "Wyjdz"};
+    int res = create_menu(window, opcje, "MENU", "", false);
 
     switch (res)
     {
@@ -287,7 +295,7 @@ int menu_main(WINDOW* window, vector<Kategoria*> &kategorie, vector<Ksiazka*>& k
         break;
 
     case 4:
-       // zapisz(kategorie, ksiazki, klienci);
+        zapisz(kategorie, ksiazki, klienci);
         break;
 
     case 5:
@@ -300,7 +308,6 @@ int menu_main(WINDOW* window, vector<Kategoria*> &kategorie, vector<Ksiazka*>& k
         menu_main(window, kategorie, ksiazki, klienci);
         break;
     }
-//    delwin(menu_window);
 
     return res;
 }
@@ -313,13 +320,13 @@ int menu_kategorie(WINDOW * window, vector <Kategoria*>& kategorie)
 
     vector<string> list_choices;
     for (int i=0; i<kategorie.size(); i++)
-        list_choices.push_back(kategorie[i]->nazwa);
+        list_choices.push_back(kategorie[i]->new_choice());
 
     vector<string> menu_choices {"Edytuj", "Usun", "Wroc"};
 
     int res, x=-1, check;
 
-    res = create_menu(window, list_choices, "Kategorie", true);
+    res = create_menu(window, list_choices, "Kategorie", "ID   Symbol  Nazwa", true);
    /* do
     {
         check = 0;
@@ -400,13 +407,13 @@ int menu_klienci(WINDOW * window, vector <Klient*> &klienci)
 
     vector<string> list_choices;
     for (int i=0; i<klienci.size(); i++)
-        list_choices.push_back(klienci[i]->imie);
+        list_choices.push_back(klienci[i]->new_choice());
 
     vector<string> menu_choices {"Edytuj", "Usun", "Wroc"};
 
     int res, x=-1, check;
 
-    res = create_menu(window, list_choices, "Klienci", true);
+    res = create_menu(window, list_choices, "Klienci", "ID   Imie                 Nazwisko", true);
     /*char ** list_choices= client_choices(klienci);
     char * menu_choices[] = {"Edytuj", "Usun", "Wroc"};
     char * fields[] = {"Imie", "Nazwisko", "Adres", "Telefon"};
@@ -519,13 +526,13 @@ int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*
 
     vector<string> list_choices;
     for (int i=0; i<ksiazki.size(); i++)
-        list_choices.push_back(ksiazki[i]->tytul);
+        list_choices.push_back(ksiazki[i]->new_choice());
 
     vector<string> menu_choices {"Edytuj", "Usun", "Wroc"};
 
     int res, x=-1, check;
 
-    res = create_menu(window, list_choices, "Ksiazki", true);
+    res = create_menu(window, list_choices, "Ksiazki", "ID   Autor                Tytul", true);
     /*char ** list_choices = book_choices(ksiazki);
     char * fields[] = {"Autor", "Tytul", "Rok wydania"};
     int result, x=-1, check;
@@ -662,4 +669,32 @@ int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*
         delete list_choices[i];*/
 
     return 0;
+}
+
+void zapisz(vector<Kategoria*> &kategorie, vector<Ksiazka*> &ksiazki, vector<Klient*> &klienci)
+{
+    int res = data_export(kategorie, ksiazki, klienci);
+    vector<string> ok{"OK"};
+    string info;
+
+    switch(res)
+    {
+        case 0:
+            info = "Zapisano pomyslnie";
+            break;
+        case -1:
+            info = "Blad pliku \"kategorie\"";
+            break;
+        case -2:
+            info = "Blad pilku \"ksiazki\"";
+            break;
+        case -3:
+            info = "Blad pliku \"klienci\"";
+            break;
+        default:
+            info = "Cos sie stalo";
+            break;
+    }
+
+    dialog(ok, "ZAPISZ", info);
 }
