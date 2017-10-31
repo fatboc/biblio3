@@ -71,7 +71,8 @@ int data_import(vector <Kategoria*> &kategorie, vector <Klient*> &klienci, vecto
         getline(in3, new_client->telefon);
         getline(in3, new_client->adres);
         getline(in3, tmp);
-        for(int i=0; i<atoi(tmp.c_str()); i++){
+        for(int i=0; i<atoi(tmp.c_str()); i++)
+        {
             string n;
             int m = -1;
             getline(in3, n);
@@ -92,7 +93,7 @@ int data_import(vector <Kategoria*> &kategorie, vector <Klient*> &klienci, vecto
         if(new_client->imie!=""&&new_client->nazwisko!=""&&new_client->id!=0)
             klienci.push_back(new_client);
         else
-         delete new_client;
+            delete new_client;
     }
     in3.close();
 
@@ -110,9 +111,29 @@ void Ksiazka::print()
         cout << "Dostepna." << endl;
     else
     {
-                cout << "Wypozyczona przez: " << wypozyczajacy->imie << " " << wypozyczajacy->nazwisko << "(nr " << wypozyczajacy->id << ")." << endl;
-                cout << "Data wypozyczenia: " << pozyczona << endl;
+        cout << "Wypozyczona przez: " << wypozyczajacy->imie << " " << wypozyczajacy->nazwisko << "(nr " << wypozyczajacy->id << ")." << endl;
+        cout << "Data wypozyczenia: " << pozyczona << endl;
     }
+}
+
+void Ksiazka::print(WINDOW * window)
+{
+    mvwprintw(window, 4, 2, "Tytul:\t\t%s", tytul.c_str());
+    mvwprintw(window, 6, 2, "Autor:\t\t%s", autor.c_str());
+    mvwprintw(window, 8, 2, "Nr katalogowy:\t%d", id);
+    mvwprintw(window, 10, 2, "Rok wydania:\t\t%s", rok_wydania.c_str());
+    mvwprintw(window, 12, 2, "Kategoria:\t\t%s", kat->nazwa.c_str());
+    if (dostepnosc)
+        mvwprintw(window, 16, 2, "Dostepna.");
+    else
+    {
+        struct tm * timeinfo;
+        timeinfo = localtime (&pozyczona);
+        mvwprintw(window, 16, 2, "Wypozyczona przez:\t%s %s (nr %d).", wypozyczajacy->imie.c_str(), wypozyczajacy->nazwisko.c_str(), wypozyczajacy->id);
+        mvwprintw(window, 18, 2, "Data wypozycznia:\t%s", asctime(timeinfo));
+    }
+
+    wrefresh(window);
 }
 
 void Klient::print()
@@ -124,13 +145,32 @@ void Klient::print()
     cout << "Nr telefonu: " << telefon << endl;
     if(pozyczone.size()!=0)
     {
-            cout << "Wypozyczone ksiazki: " << endl;
-            int j=0;
-            for (vector<Ksiazka*>::iterator i=pozyczone.begin(); i!=pozyczone.end(); i++, j++)
-                cout << "\t- " << pozyczone[j]->tytul << " (nr " << pozyczone[j]->id << ")." << endl;
+        cout << "Wypozyczone ksiazki: " << endl;
+        int j=0;
+        for (vector<Ksiazka*>::iterator i=pozyczone.begin(); i!=pozyczone.end(); i++, j++)
+            cout << "\t- " << pozyczone[j]->tytul << " (nr " << pozyczone[j]->id << ")." << endl;
     }
     else
         cout << "Brak wypozyczonych ksiazek." << endl;
+}
+
+void Klient::print(WINDOW * window)
+{
+    mvwprintw(window, 4, 2, "Imie:\t\t%s", imie.c_str());
+    mvwprintw(window, 6, 2, "Nazwisko:\t%s", nazwisko.c_str());
+    mvwprintw(window, 8, 2, "Nr karty:\t%d", id);
+    mvwprintw(window, 10, 2, "Adres:\t%s", adres.c_str());
+    mvwprintw(window, 12, 2, "Nr telefonu:\t%s", telefon.c_str());
+    if (pozyczone.size()==0)
+        mvwprintw(window, 14, 2, "Brak wypozyczonych ksiazek.");
+    else
+    {
+        mvwprintw(window, 14, 2, "Wypozyczone ksiazki:");
+        for(int i=0; i<pozyczone.size(); i++)
+            mvwprintw(window, 16+2*i, 2, "%d - %s", pozyczone[i]->id, pozyczone[i]->tytul.c_str());
+    }
+
+    wrefresh(window);
 }
 
 void Kategoria::print()
@@ -140,13 +180,31 @@ void Kategoria::print()
     cout << "ID: " << id << endl;
     if(nalezace.size()!=0)
     {
-            cout << "Do kategorii naleza: " << endl;
-            int j=0;
-            for (vector<Ksiazka*>::iterator i=nalezace.begin(); i!=nalezace.end(); i++, j++)
-                cout << "\t- " << nalezace[j]->tytul << " (nr " << nalezace[j]->id << ")." << endl;
+        cout << "Do kategorii naleza: " << endl;
+        int j=0;
+        for (vector<Ksiazka*>::iterator i=nalezace.begin(); i!=nalezace.end(); i++, j++)
+            cout << "\t- " << nalezace[j]->tytul << " (nr " << nalezace[j]->id << ")." << endl;
     }
     else
         cout << "Brak ksiazek w kategorii." << endl;
+}
+
+void Kategoria::print(WINDOW * window)
+{
+    mvwprintw(window, 4, 2, "Nazwa:\t%s", nazwa.c_str());
+    mvwprintw(window, 6, 2, "Symbol:\t%s", symbol.c_str());
+    mvwprintw(window, 8, 2, "Numer:\t%d", id);
+
+    if (nalezace.size()==0)
+        mvwprintw(window, 10, 2, "Brak ksiazek w kategorii.");
+    else
+    {
+        mvwprintw(window, 10, 2, "Do kategorii naleza:");
+        for (int i=0; i<nalezace.size(); i++)
+            mvwprintw(window, 12+2*i, 2, "%d - %s", nalezace[i]->id, nalezace[i]->tytul.c_str());
+    }
+
+    wrefresh(window);
 }
 
 void Kategoria::modify(vector<string>& data)
@@ -187,7 +245,8 @@ void add_book(vector<Ksiazka*> &ksiazki, vector<Kategoria*> &kategorie, vector<s
         if (find_id(ksiazki, atoi(data[2].c_str()))!=-1) throw "ID juz istnieje";
         if (kat_no==-1) throw "Bledna kateogria";
     }
-    catch(const char * ex){
+    catch(const char * ex)
+    {
         cout << ex << endl;
         exit(EXIT_FAILURE);
     }
@@ -210,7 +269,8 @@ void add_client(vector<Klient*> &klienci, vector<string> &data)
     {
         if (find_id(klienci, atoi(data[2].c_str()))!=-1) throw "ID juz istnieje";
     }
-    catch(const char * ex){
+    catch(const char * ex)
+    {
         cout << ex << endl;
         exit(EXIT_FAILURE);
     }
@@ -228,7 +288,8 @@ void add_category(vector<Kategoria*> &kategorie, vector<string> &data)
     {
         if (find_id(kategorie, atoi(data[2].c_str()))!=-1) throw "ID juz istnieje";
     }
-    catch(const char * ex){
+    catch(const char * ex)
+    {
         cout << ex << endl;
         exit(EXIT_FAILURE);
     }

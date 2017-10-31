@@ -3,24 +3,24 @@
 int create_menu(WINDOW * window, vector<string> &list_choices, string header, string guide, bool upper_present)
 //generowanie dowolnego menu
 {
-	WINDOW *menu_window, *list_window, *current_window;
-	ITEM **menu_items, **list_items;
-	MENU *menu, *lista, *current_menu;
-	bool upper_active = false;
-	int n = list_choices.size(), res = -1, c, j;
-	int height = LINES-4, width = COLS-2, starty = (LINES-height)/2, startx = (COLS-width)/2, shifty, shiftx=5;
-	char tmp[n][256];
+    WINDOW *menu_window, *list_window, *current_window;
+    ITEM **menu_items, **list_items;
+    MENU *menu, *lista, *current_menu;
+    bool upper_active = false;
+    int n = list_choices.size(), res = -1, c, j;
+    int height = LINES-4, width = COLS-2, starty = (LINES-height)/2, startx = (COLS-width)/2, shifty, shiftx=5;
+    char tmp[n][256];
 
-	init_pair(1, COLOR_WHITE, COLOR_BLUE);
-	init_pair(2, COLOR_WHITE, COLOR_RED);
-	init_pair(3, COLOR_BLUE, COLOR_WHITE);
-	init_pair(4, COLOR_BLACK, COLOR_CYAN);
-	init_pair(5, COLOR_BLACK, COLOR_WHITE);
+    init_pair(1, COLOR_WHITE, COLOR_BLUE);
+    init_pair(2, COLOR_WHITE, COLOR_RED);
+    init_pair(3, COLOR_BLUE, COLOR_WHITE);
+    init_pair(4, COLOR_BLACK, COLOR_CYAN);
+    init_pair(5, COLOR_BLACK, COLOR_WHITE);
 
     wclear(window);
-	wbkgd(window, COLOR_PAIR(4));
-	box(window, 0, 0);
-	keypad(window, TRUE);
+    wbkgd(window, COLOR_PAIR(4));
+    box(window, 0, 0);
+    keypad(window, TRUE);
 
     int len = header.length();
     wattron(window, A_BOLD);
@@ -38,134 +38,135 @@ int create_menu(WINDOW * window, vector<string> &list_choices, string header, st
         mvwprintw(window, 4, 4, "%s", guide.c_str());
 
 //menu listy
-	list_items = (ITEM**)calloc(n+1, sizeof(ITEM*));
-	for (int i=0; i<n; i++)
-	{
-		strcpy(tmp[i], list_choices[i].c_str());
-		list_items[i] = new_item(tmp[i], "");
-	}
-	list_items[n] = (ITEM*)NULL;
+    list_items = (ITEM**)calloc(n+1, sizeof(ITEM*));
+    for (int i=0; i<n; i++)
+    {
+        strcpy(tmp[i], list_choices[i].c_str());
+        list_items[i] = new_item(tmp[i], "");
+    }
+    list_items[n] = (ITEM*)NULL;
 
-	lista = new_menu(list_items);
+    lista = new_menu(list_items);
 
     if(guide.length()==0)
         shifty = 2;
     else
         shifty = 4;
 
-	list_window = subwin(window, height-shifty, width-shiftx, starty+shifty, startx+(shiftx/2));
-	set_menu_win(lista, list_window);
-	set_menu_sub(lista, list_window);
+    list_window = subwin(window, height-shifty, width-shiftx, starty+shifty, startx+(shiftx/2));
+    set_menu_win(lista, list_window);
+    set_menu_sub(lista, list_window);
 
-	set_menu_back(lista, COLOR_PAIR(4));
-	set_menu_fore(lista, COLOR_PAIR(2));
-	set_menu_mark(lista, " ");
+    set_menu_back(lista, COLOR_PAIR(4));
+    set_menu_fore(lista, COLOR_PAIR(2));
+    set_menu_mark(lista, " ");
 
-	refresh();
-	post_menu(lista);
+    refresh();
+    post_menu(lista);
 
 //gorne menu
-	if(upper_present){
-		vector<string> menu_choices {"Szukaj", "Sortuj", "Filtruj", "Nowy", "Wroc"};
-		j = menu_choices.size();
+    if(upper_present)
+    {
+        vector<string> menu_choices {"Szukaj", "Sortuj", "Filtruj", "Nowy", "Wroc"};
+        j = menu_choices.size();
 
-		menu_items = (ITEM**)calloc(j+1, sizeof(ITEM*));
-		for (int i=0; i<j; i++)
-		{
-			menu_items[i] = new_item(menu_choices[i].c_str(), "");
-		}
-		menu_items[j] = (ITEM*)NULL;
+        menu_items = (ITEM**)calloc(j+1, sizeof(ITEM*));
+        for (int i=0; i<j; i++)
+        {
+            menu_items[i] = new_item(menu_choices[i].c_str(), "");
+        }
+        menu_items[j] = (ITEM*)NULL;
 
-		menu = new_menu(menu_items);
+        menu = new_menu(menu_items);
 
-		menu_window = subwin(window, 1, width, starty, startx);
-		//keypad(menu_window, TRUE);
-		set_menu_win(menu, menu_window);
-		set_menu_sub(menu, menu_window);
+        menu_window = subwin(window, 1, width, starty, startx);
+        //keypad(menu_window, TRUE);
+        set_menu_win(menu, menu_window);
+        set_menu_sub(menu, menu_window);
 
-		wbkgd(menu_window, COLOR_PAIR(1));
-		set_menu_back(menu, COLOR_PAIR(1));
-		set_menu_fore(menu, COLOR_PAIR(1));
-		set_menu_format(menu, 1, 5);
-		set_menu_mark(menu, "  ");
-		set_menu_spacing(menu, 0, 0, 3);
+        wbkgd(menu_window, COLOR_PAIR(1));
+        set_menu_back(menu, COLOR_PAIR(1));
+        set_menu_fore(menu, COLOR_PAIR(1));
+        set_menu_format(menu, 1, 5);
+        set_menu_mark(menu, "  ");
+        set_menu_spacing(menu, 0, 0, 3);
 
-		refresh();
-		post_menu(menu);
-	}
-	wrefresh(window);
+        refresh();
+        post_menu(menu);
+    }
+    wrefresh(window);
 
-	current_menu = lista;
+    current_menu = lista;
     current_window = list_window;
 
 //sterowanie
-	while((c = wgetch(window))!=KEY_F(1))
-	{
-		if(upper_active)
-		{
-			current_menu = menu;
-			current_window = menu_window;
-		}
-		else if(upper_present)
-		{
+    while((c = wgetch(window))!=KEY_F(1))
+    {
+        if(upper_active)
+        {
+            current_menu = menu;
+            current_window = menu_window;
+        }
+        else if(upper_present&&!upper_active)
+        {
             current_menu = lista;
-			current_window = list_window;
-		}
+            current_window = list_window;
+        }
 
-		switch(c)
-		{
-			case KEY_UP:
-				if(!upper_active)
-					menu_driver(current_menu, REQ_PREV_ITEM);
-				break;
-			case KEY_LEFT:
-				if(upper_active)
-					menu_driver(current_menu, REQ_PREV_ITEM);
-				break;
-			case KEY_DOWN:
-				if(!upper_active)
-					menu_driver(current_menu, REQ_NEXT_ITEM);
-				break;
-			case KEY_RIGHT:
-				if(upper_active)
-					menu_driver(current_menu, REQ_NEXT_ITEM);
-                break;
-			case '\t':
-			{
-                if(upper_present)
+        switch(c)
+        {
+        case KEY_UP:
+            if(!upper_active)
+                menu_driver(current_menu, REQ_PREV_ITEM);
+            break;
+        case KEY_LEFT:
+            if(upper_active)
+                menu_driver(current_menu, REQ_PREV_ITEM);
+            break;
+        case KEY_DOWN:
+            if(!upper_active)
+                menu_driver(current_menu, REQ_NEXT_ITEM);
+            break;
+        case KEY_RIGHT:
+            if(upper_active)
+                menu_driver(current_menu, REQ_NEXT_ITEM);
+            break;
+        case '\t':
+        {
+            if(upper_present)
+            {
+                if(upper_active)
                 {
-                    if(upper_active)
-                    {
-                        set_menu_fore(menu, COLOR_PAIR(1));
-                        wrefresh(menu_window);
-                        set_menu_fore(lista, COLOR_PAIR(2));
-                        wrefresh(list_window);
-                    }
-                    else
-                    {
-                        set_menu_fore(menu, COLOR_PAIR(2));
-                        wrefresh(menu_window);
-                        set_menu_fore(lista, COLOR_PAIR(5));
-                        wrefresh(list_window);
-                    }
-                    upper_active = !upper_active;
+                    set_menu_fore(menu, COLOR_PAIR(1));
+                    wrefresh(menu_window);
+                    set_menu_fore(lista, COLOR_PAIR(2));
+                    wrefresh(list_window);
                 }
-                break;
-			}
-			case 10:
-                res = item_index(current_item(current_menu))+1;
-                break;
-		}
-		wrefresh(current_window);
-		if (res!=-1) break;
-	}
-	if (upper_present)
-	{
+                else
+                {
+                    set_menu_fore(menu, COLOR_PAIR(2));
+                    wrefresh(menu_window);
+                    set_menu_fore(lista, COLOR_PAIR(5));
+                    wrefresh(list_window);
+                }
+                upper_active = !upper_active;
+            }
+            break;
+        }
+        case 10:
+            res = item_index(current_item(current_menu))+1;
+            break;
+        }
+        wrefresh(current_window);
+        if (res!=-1) break;
+    }
+    if (upper_present)
+    {
         for (int i=0; i<j+1; i++)
             free_item(menu_items[i]);
 
         free_menu(menu);
-	}
+    }
 
     for (int i=0; i<n+1; i++)
         free_item(list_items[i]);
@@ -233,10 +234,8 @@ int dialog(vector<string> &choices, string header, string text)
             menu_driver(menu, REQ_NEXT_ITEM);
             break;
         case 10:
-        {
             x = item_index(current_item(menu));
             break;
-        }
         }
         if (x!=-1) break;
         wrefresh(pop_up);
@@ -278,128 +277,68 @@ int init()
 int menu_main(WINDOW* window, vector<Kategoria*> &kategorie, vector<Ksiazka*>& ksiazki, vector<Klient*> &klienci)
 {
     vector<string> opcje {"Przegladaj ksiazki", "Przegladaj klientow", "Przegladaj kategorie", "Zapisz", "Wyjdz"};
-    int res = create_menu(window, opcje, "MENU", "", false);
+    int res, x=0;
 
-    switch (res)
+    do
     {
-    case 1:
-        menu_ksiazki(window, ksiazki, kategorie, klienci);
-        break;
+        res = create_menu(window, opcje, "MENU", "", false), x;
+        x = 0;
 
-    case 2:
-        menu_klienci(window, klienci);
-        break;
+        switch (res)
+        {
+        case 1:
+            x = menu_ksiazki(window, ksiazki, kategorie, klienci);
+            break;
 
-    case 3:
-        menu_kategorie(window, kategorie);
-        break;
+        case 2:
+            x = menu_klienci(window, klienci);
+            break;
 
-    case 4:
-        zapisz(kategorie, ksiazki, klienci);
-        break;
+        case 3:
+            x = menu_kategorie(window, kategorie);
+            break;
 
-    case 5:
-        break;
+        case 4:
+            zapisz(kategorie, ksiazki, klienci);
+            break;
 
-    case -1:
-        break;
+        case 5:
+            break;
 
-    default:
-        menu_main(window, kategorie, ksiazki, klienci);
-        break;
-    }
+        case -1:
+            x = 3;
+            break;
 
-    return res;
+        default:
+            menu_main(window, kategorie, ksiazki, klienci);
+            break;
+        }
+    }while (res!=-1&&res!=5);
+
+    return 0;
 }
 
 int menu_kategorie(WINDOW * window, vector <Kategoria*>& kategorie)
 {
-    /*char ** list_choices = cat_choices(kategorie);
-    char * menu_choices[] = {"Edytuj", "Usun", "Wroc"};
-    char * fields[] = {"Symbol", "Nazwa"};*/
-
     vector<string> list_choices;
+
     for (int i=0; i<kategorie.size(); i++)
         list_choices.push_back(kategorie[i]->new_choice());
 
     vector<string> menu_choices {"Edytuj", "Usun", "Wroc"};
 
-    int res, x=-1, check;
+    int res=0, x=0, check;
 
-    res = create_menu(window, list_choices, "Kategorie", "ID   Symbol  Nazwa", true);
-   /* do
+    do
     {
-        check = 0;
-        if(result>0)
-        {
-            do
-            {
-                x = item_details<kategoria>(window, kategorie[result-1], "KATEGORIA", KATEGORIA, menu_choices);
-                switch (x)
-                {
-                case 0:
-                {
-                    const char * data[] = {kategorie[result-1]->symbol.c_str(), kategorie[result-1]->nazwa.c_str()};
-                    item_form(kategorie[result-1], 2, "EDYTUJ", fields, data);
-                    x=-1;
-                    break;
-                }
-                case 1:
-                {
-                    if(usun(kategorie, result-1)==1)
-                        x = -1;
-                    else
-                        menu_kategorie(window, kategorie);
-                    break;
-                }
-                case 2:
-                    menu_kategorie(window, kategorie);
-                    break;
-                }
-            }
-            while (x<0);
-        }
+        res = create_menu(window, list_choices, "KATEGORIE", "ID   Symbol  Nazwa", true);
 
-        else
-            switch (result)
-            {
-            case -1:
-            {
-                int x;
-                char * choices[] = {"Symbolu", "Nazwy"};
-                x = dialog(choices, 2, "SORTUJ", "Sortuj wedlug:");
-                if(x==0)
-                {
-                    sort_symbol(kategorie);
-                }
-                else if(x==1)
-                {
-                    sort_nazwa(kategorie);
-                }
-                menu_kategorie(window, kategorie);
-            }
-            break;
-            case -2:
-            {
-                char * choices[] = {"OK"};
-                dialog(choices, 1, "FILTRUJ", "Brak dostepnych filtrow.");
-                menu_kategorie(window, kategorie);
-            }
-            case -3:
-            {
-                result = cat_search(kategorie);
-                check++;
-                break;
-            }
-            case -4:
-                add_cat(kategorie);
-                menu_kategorie(window, kategorie);
-                break;
-            }
-    }
-    while (check!=0);*/
+        if (res>0)
+            x = item_details(window, kategorie[res-1], "KATEGORIE", menu_choices);
+    } while (res!=-5);
 
-    return 0;
+
+    return res;
 }
 
 int menu_klienci(WINDOW * window, vector <Klient*> &klienci)
@@ -411,262 +350,37 @@ int menu_klienci(WINDOW * window, vector <Klient*> &klienci)
 
     vector<string> menu_choices {"Edytuj", "Usun", "Wroc"};
 
-    int res, x=-1, check;
-
-    res = create_menu(window, list_choices, "Klienci", "ID   Imie                 Nazwisko", true);
-    /*char ** list_choices= client_choices(klienci);
-    char * menu_choices[] = {"Edytuj", "Usun", "Wroc"};
-    char * fields[] = {"Imie", "Nazwisko", "Adres", "Telefon"};
-    int result, x=-1, check, found=0;
-
-    result = list_view("KLIENCI", list_choices, klienci.size(), "#  Nr karty  Imie         Nazwisko");
+    int res, x=0, check;
 
     do
     {
-        check=0;
-        if(result>0||found==1)
-        {
-            do
-            {
-                x = item_details<Klient>(window, klienci[result-1], "KLIENCI", KLIENT, menu_choices);
-                switch (x)
-                {
-                case 0:
-                {
-                    const char * data[] = {klienci[result-1]->imie.c_str(),
-                                           klienci[result-1]->nazwisko.c_str(),
-                                           klienci[result-1]->adres.c_str(),
-                                           klienci[result-1]->telefon.c_str()
-                                          };
-                    item_form(klienci[result-1], 4, "EDYTUJ", fields, data);
-                    x=-1;
-                    break;
-                }
-                case 1:
-                {
-                    if(usun(klienci, result-1)==1)
-                        x = -1;
-                    else
-                        menu_klienci(window, klienci);
-                    break;
-                }
-                case 2:
-                    menu_klienci(window, klienci);
-                    break;
-                }
-            }
-            while (x<0);
-        }
+        res = create_menu(window, list_choices, "Klienci", "ID   Imie                 Nazwisko", true);
 
-        else
-            check=0;
-        switch (result)
-        {
-        case -1:
-        {
-            char * choices[] = {"Nr karty", "Imienia", "Nazwiska"};
-            int x;
-            x = dialog(choices, 3, "SORTUJ", "Sortuj wedlug:");
-            switch (x)
-            {
-            case 0:
-                sort_cid(klienci);
-                break;
-            case 1:
-                sort_imie(klienci);
-                break;
-            case 2:
-                sort_nazwisko(klienci);
-                break;
-            }
-            menu_klienci(window, klienci);
-        }
-        break;
-        case -2:
-        {
-            char * choices[] = {"Tylko wypozyczajacy", "Tylko zadluzeni"};
-            int y = dialog(choices, 2, "FILTRUJ", "Filtruj:");
-            vector<klient*> results;
-            if(client_search(results, klienci, y+1)!=-5)
-                menu_klienci(window, results);
-            break;
-        }
-        case -3:
-        {
-            vector<klient*> results;
-            result = client_search(results, klienci, 0);
-            check++;
-            break;
-        }
-        case -4:
-        {
-            add_client(klienci);
-            char * ok[] = {"OK"};
-            char text[4];
-            sprintf(text, "%d.", klienci.size());
-            dialog(ok, 1, "ELO", text);
-            menu_klienci(window, klienci);
-            break;
-        }
-
-        case -5:
-            check =0;
-            break;
-        }
-    }
-    while(check!=0);
-
-    for (int i=0; i<klienci.size(); i++)
-        delete list_choices[i];*/
+        if(res>0)
+            x = item_details(window, klienci[res-1], "KLIENCI", menu_choices);
+    } while (res!=-5);
 
     return 0;
 }
 
-int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*> &kategorie, vector <Klient*> klienci){
-
+int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*> &kategorie, vector <Klient*> klienci)
+{
     vector<string> list_choices;
+
     for (int i=0; i<ksiazki.size(); i++)
         list_choices.push_back(ksiazki[i]->new_choice());
 
     vector<string> menu_choices {"Edytuj", "Usun", "Wroc"};
 
-    int res, x=-1, check;
-
-    res = create_menu(window, list_choices, "Ksiazki", "ID   Autor                Tytul", true);
-    /*char ** list_choices = book_choices(ksiazki);
-    char * fields[] = {"Autor", "Tytul", "Rok wydania"};
-    int result, x=-1, check;
-
-    result = list_view("Ksiazki", list_choices, ksiazki.size(), "#  Autor          Tytul");
+    int res=0, x=0;
 
     do
     {
-        check = 0;
-        if(result>0)
-        {
-            do
-            {
-                if(ksiazki[result-1]->dostepnosc)
-                {
-                    char * menu_choices[] = {"Edytuj", "Usun", "Wypozycz", "Wroc"};
-                    x = item_details<ksiazka>(window, ksiazki[result-1], "KSIAZKI", KSIAZKA, menu_choices);
-                }
-                else
-                {
-                    char * menu_choices[] = {"Edytuj", "Usun", "Zwroc", "Wroc"};
-                    x = item_details<ksiazka>(window, ksiazki[result-1], "KSIAZKI", KSIAZKA, menu_choices);
-                }
+        res = create_menu(window, list_choices, "KSIAZKI", "ID   Autor                Tytul", true);
 
-                switch (x)
-                {
-                case 0:
-                {
-                    const char * data[] = {ksiazki[result-1]->autor.c_str(),
-                                           ksiazki[result-1]->tytul.c_str(),
-                                           ksiazki[result-1]->rok_wydania.c_str()
-                                          };
-                    item_form(ksiazki[result-1], 3, "EDYTUJ", fields, data);
-                    x=-1;
-                    break;
-                }
-                case 1:
-                {
-                    if(usun(ksiazki, result-1)==1)
-                        x = -1;
-                    else
-                        menu_ksiazki(window, ksiazki, kategorie, klienci);
-                    break;
-                }
-                case 2:
-                {
-                    if(ksiazki[result-1]->dostepnosc)
-                    {
-                        vector<klient*> results;
-                        int res = client_search(results, klienci, 0);
-                        if(res>0)
-                        {
-                            ksiazki[result-1]->wypozyczajacy = klienci[res-1];
-                            ksiazki[result-1]->pozyczona = time(0);
-                            ksiazki[result-1]->dostepnosc = false;
-                            klienci[res-1]->pozyczone.push_back(ksiazki[result-1]);
-                            char * ok[] = {"OK"};
-                            dialog(ok, 1, "WYPOZYCZ", "Pozycja wypozyczona.");
-                        }
-                    }
-
-                    else
-                    {
-                        vector<ksiazka*>::iterator i;
-                        i = find(ksiazki[result-1]->wypozyczajacy->pozyczone.begin(), ksiazki[result-1]->wypozyczajacy->pozyczone.end(), ksiazki[result-1]);
-                        if (i!= ksiazki[result-1]->wypozyczajacy->pozyczone.end())
-                        {
-                            ksiazki[result-1]->wypozyczajacy->pozyczone.erase(i);
-                            ksiazki[result-1]->wypozyczajacy = NULL;
-                            ksiazki[result-1]->pozyczona = 0;
-                            ksiazki[result-1]->dostepnosc = true;
-                            char * ok[] = {"OK"};
-                            dialog(ok, 1, "ZWROC", "Pozycja zwrocona.");
-
-                        }
-                    }
-                }
-                case 3:
-                    menu_ksiazki(window, ksiazki, kategorie, klienci);
-                    break;
-                }
-            }
-            while (x<0);
-        }
-
-        else
-            switch (result)
-            {
-            case -1:
-            {
-                int x;
-                char * choices[] = {"Numeru", "Autora", "Tytulu"};
-                x = dialog(choices, 3, "SORTUJ", "Sortuj wedlug:");
-                switch (x)
-                {
-                case 0:
-                    sort_bid(ksiazki);
-                    break;
-                case 1:
-                    sort_autor(ksiazki);
-                    break;
-                case 2:
-                    sort_tytul(ksiazki);
-                    break;
-                }
-                menu_ksiazki(window, ksiazki, kategorie, klienci);
-            }
-            break;
-            case -2:
-            {
-                char * choices[] = {"Tylko wypozyczone", "Tylko przetrzymane", "Tylko dostepne"};
-                int y = dialog(choices, 3, "FILTRUJ", "Filtruj:");
-                vector<ksiazka*> results;
-                if(book_search(results, ksiazki, y+1)!=-5)
-                    menu_ksiazki(window, results, kategorie, klienci);
-                break;
-            }
-            case -3:
-            {
-                vector<ksiazka*> results;
-                result = book_search(results, ksiazki, 0);
-                check++;
-                break;
-            }
-            case -4:
-                add_book(ksiazki, kategorie);
-                menu_ksiazki(window, ksiazki, kategorie, klienci);
-                break;
-            }
-    }
-    while(check!=0);
-
-    for (int i=0; i<ksiazki.size(); i++)
-        delete list_choices[i];*/
+        if(res>0)
+            x = item_details(window, ksiazki[res-1], "KSIAZKI", menu_choices);
+    } while (res!=-5);
 
     return 0;
 }
@@ -674,26 +388,26 @@ int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*
 void zapisz(vector<Kategoria*> &kategorie, vector<Ksiazka*> &ksiazki, vector<Klient*> &klienci)
 {
     int res = data_export(kategorie, ksiazki, klienci);
-    vector<string> ok{"OK"};
+    vector<string> ok {"OK"};
     string info;
 
     switch(res)
     {
-        case 0:
-            info = "Zapisano pomyslnie";
-            break;
-        case -1:
-            info = "Blad pliku \"kategorie\"";
-            break;
-        case -2:
-            info = "Blad pilku \"ksiazki\"";
-            break;
-        case -3:
-            info = "Blad pliku \"klienci\"";
-            break;
-        default:
-            info = "Cos sie stalo";
-            break;
+    case 0:
+        info = "Zapisano pomyslnie";
+        break;
+    case -1:
+        info = "Blad pliku \"kategorie\"";
+        break;
+    case -2:
+        info = "Blad pilku \"ksiazki\"";
+        break;
+    case -3:
+        info = "Blad pliku \"klienci\"";
+        break;
+    default:
+        info = "Cos sie stalo";
+        break;
     }
 
     dialog(ok, "ZAPISZ", info);

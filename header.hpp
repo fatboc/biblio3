@@ -30,6 +30,7 @@ struct Ksiazka
     time_t pozyczona;
 
     void print();
+    void print(WINDOW *);
     void modify(vector<string>& data);
     size_t find_text (string text);
     bool check();
@@ -47,6 +48,7 @@ struct Klient
     vector <Ksiazka*> pozyczone;
 
     void print();
+    void print(WINDOW *);
     void modify(vector<string>& data);
     size_t find_text(string text);
     bool check();
@@ -62,6 +64,7 @@ struct Kategoria
     int id;
 
     void print();
+    void print(WINDOW *);
     void modify(vector<string>& data);
     size_t find_text(string text);
     bool check();
