@@ -2,6 +2,25 @@
 
 using namespace std;
 
+template<typename T, typename M>
+struct item_cmp
+{
+    M T::*member2;
+
+    item_cmp(M T::*member) : member2(member) {}
+
+    bool operator()(T *a, T *b) const
+    {
+        return a->*member2 < b->*member2;
+    }
+};
+
+template<typename T, typename M>
+item_cmp<T, M> item_sort(M T::*member)
+{
+    return item_cmp<T, M>(member);
+}
+
 template <typename T>
 void delete_item(vector<T*>& data, int pos)
 {

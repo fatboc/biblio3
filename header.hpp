@@ -18,6 +18,8 @@ typedef struct Ksiazka Ksiazka;
 typedef struct Klient Klient;
 typedef struct Kategoria Kategoria;
 
+
+
 struct Ksiazka
 {
     string tytul;

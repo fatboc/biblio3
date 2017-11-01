@@ -9,7 +9,6 @@ int create_menu(WINDOW * window, vector<string> &list_choices, string header, st
     bool upper_active = false;
     int n = list_choices.size(), res = -1, c, j;
     int height = LINES-4, width = COLS-2, starty = (LINES-height)/2, startx = (COLS-width)/2, shifty, shiftx=5;
-    char tmp[n][256];
 
     init_pair(1, COLOR_WHITE, COLOR_BLUE);
     init_pair(2, COLOR_WHITE, COLOR_RED);
@@ -41,8 +40,7 @@ int create_menu(WINDOW * window, vector<string> &list_choices, string header, st
     list_items = (ITEM**)calloc(n+1, sizeof(ITEM*));
     for (int i=0; i<n; i++)
     {
-        strcpy(tmp[i], list_choices[i].c_str());
-        list_items[i] = new_item(tmp[i], "");
+        list_items[i] = new_item(list_choices[i].c_str(), "");
     }
     list_items[n] = (ITEM*)NULL;
 
@@ -207,7 +205,6 @@ int dialog(vector<string> &choices, string header, string text)
     keypad(pop_up, TRUE);
     refresh();
 
-    wbkgd(stdscr, COLOR_PAIR(2));
     wbkgd(pop_up, COLOR_PAIR(1));
     box(pop_up, 0, 0);
     mvwaddch(pop_up, 2, 0, ACS_LTEE);
@@ -277,25 +274,24 @@ int init()
 int menu_main(WINDOW* window, vector<Kategoria*> &kategorie, vector<Ksiazka*>& ksiazki, vector<Klient*> &klienci)
 {
     vector<string> opcje {"Przegladaj ksiazki", "Przegladaj klientow", "Przegladaj kategorie", "Zapisz", "Wyjdz"};
-    int res, x=0;
+    int res;
 
     do
     {
-        res = create_menu(window, opcje, "MENU", "", false), x;
-        x = 0;
+        res = create_menu(window, opcje, "MENU", "", false);
 
         switch (res)
         {
         case 1:
-            x = menu_ksiazki(window, ksiazki, kategorie, klienci);
+            menu_ksiazki(window, ksiazki, kategorie, klienci);
             break;
 
         case 2:
-            x = menu_klienci(window, klienci);
+            menu_klienci(window, klienci);
             break;
 
         case 3:
-            x = menu_kategorie(window, kategorie);
+            menu_kategorie(window, kategorie);
             break;
 
         case 4:
@@ -306,7 +302,6 @@ int menu_main(WINDOW* window, vector<Kategoria*> &kategorie, vector<Ksiazka*>& k
             break;
 
         case -1:
-            x = 3;
             break;
 
         default:
@@ -327,14 +322,42 @@ int menu_kategorie(WINDOW * window, vector <Kategoria*>& kategorie)
 
     vector<string> menu_choices {"Edytuj", "Usun", "Wroc"};
 
-    int res=0, x=0, check;
+    int res=0;
 
     do
     {
         res = create_menu(window, list_choices, "KATEGORIE", "ID   Symbol  Nazwa", true);
 
         if (res>0)
-            x = item_details(window, kategorie[res-1], "KATEGORIE", menu_choices);
+            item_details(window, kategorie[res-1], "KATEGORIE", menu_choices);
+
+        else
+            switch(res)
+            {
+            case -2:
+            {
+                vector<string> choices {"Wg numeru", "Wg symbolu", "Wg nazwy"};
+                int how = dialog(choices, "SORTUJ", "Wybierz sposob sortowania:");
+                switch (how)
+                {
+                case 0:
+                    sort(kategorie.begin(), kategorie.end(), item_sort(&Kategoria::id));
+                    break;
+                case 1:
+                    sort(kategorie.begin(), kategorie.end(), item_sort(&Kategoria::symbol));
+                    break;
+                case 2:
+                    sort(kategorie.begin(), kategorie.end(), item_sort(&Kategoria::nazwa));
+                    break;
+                }
+                list_choices.clear();
+                for (int i=0; i<kategorie.size(); i++)
+                    list_choices.push_back(kategorie[i]->new_choice());
+                break;
+            }
+            default:
+                break;
+            }
     } while (res!=-5);
 
 
@@ -350,14 +373,42 @@ int menu_klienci(WINDOW * window, vector <Klient*> &klienci)
 
     vector<string> menu_choices {"Edytuj", "Usun", "Wroc"};
 
-    int res, x=0, check;
+    int res;
 
     do
     {
         res = create_menu(window, list_choices, "Klienci", "ID   Imie                 Nazwisko", true);
 
         if(res>0)
-            x = item_details(window, klienci[res-1], "KLIENCI", menu_choices);
+            item_details(window, klienci[res-1], "KLIENCI", menu_choices);
+
+        else
+            switch(res)
+            {
+            case -2:
+            {
+                vector<string> choices {"Wg numeru", "Wg imienia", "Wg nazwiska"};
+                int how = dialog(choices, "SORTUJ", "Wybierz sposob sortowania:");
+                switch (how)
+                {
+                case 0:
+                    sort(klienci.begin(), klienci.end(), item_sort(&Klient::id));
+                    break;
+                case 1:
+                    sort(klienci.begin(), klienci.end(), item_sort(&Klient::imie));
+                    break;
+                case 2:
+                    sort(klienci.begin(), klienci.end(), item_sort(&Klient::nazwisko));
+                    break;
+                }
+                list_choices.clear();
+                for (int i=0; i<klienci.size(); i++)
+                    list_choices.push_back(klienci[i]->new_choice());
+                break;
+            }
+            default:
+                break;
+            }
     } while (res!=-5);
 
     return 0;
@@ -372,14 +423,42 @@ int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*
 
     vector<string> menu_choices {"Edytuj", "Usun", "Wroc"};
 
-    int res=0, x=0;
+    int res=0;
 
     do
     {
         res = create_menu(window, list_choices, "KSIAZKI", "ID   Autor                Tytul", true);
 
         if(res>0)
-            x = item_details(window, ksiazki[res-1], "KSIAZKI", menu_choices);
+            item_details(window, ksiazki[res-1], "KSIAZKI", menu_choices);
+
+        else
+            switch(res)
+            {
+            case -2:
+            {
+                vector<string> choices {"Wg numeru", "Wg autora", "Wg tytulu"};
+                int how = dialog(choices, "SORTUJ", "Wybierz sposob sortowania:");
+                switch (how)
+                {
+                case 0:
+                    sort(ksiazki.begin(), ksiazki.end(), item_sort(&Ksiazka::id));
+                    break;
+                case 1:
+                    sort(ksiazki.begin(), ksiazki.end(), item_sort(&Ksiazka::autor));
+                    break;
+                case 2:
+                    sort(ksiazki.begin(), ksiazki.end(), item_sort(&Ksiazka::tytul));
+                    break;
+                }
+                list_choices.clear();
+                for (int i=0; i<ksiazki.size(); i++)
+                    list_choices.push_back(ksiazki[i]->new_choice());
+                break;
+            }
+            default:
+                break;
+            }
     } while (res!=-5);
 
     return 0;

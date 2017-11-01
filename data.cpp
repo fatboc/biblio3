@@ -209,7 +209,8 @@ void Kategoria::print(WINDOW * window)
 
 void Kategoria::modify(vector<string>& data)
 {
-
+    if (data.size()<3)
+        exit(EXIT_FAILURE);
     symbol = data[0];
     nazwa = data[1];
     (stringstream)data[2] >> id;
@@ -343,7 +344,7 @@ int data_export(vector<Kategoria*> &kategorie, vector<Ksiazka*> &ksiazki, vector
     ofstream out2("ksiazki");
     ofstream out3("klienci");
 
-    int j=0;
+    int j;
 
     try
     {
@@ -356,6 +357,8 @@ int data_export(vector<Kategoria*> &kategorie, vector<Ksiazka*> &ksiazki, vector
         return ex;
     }
 
+    j=0;
+    sort(ksiazki.begin(), ksiazki.end(), item_sort(&Kategoria::id));
     for (vector<Kategoria*>::iterator i=kategorie.begin(); i!=kategorie.end(); i++, j++)
     {
         kategorie[j]->item_export(out1);
@@ -363,6 +366,7 @@ int data_export(vector<Kategoria*> &kategorie, vector<Ksiazka*> &ksiazki, vector
     out1.close();
 
     j=0;
+    sort(ksiazki.begin(), ksiazki.end(), item_sort(&Ksiazka::id));
     for (vector<Ksiazka*>::iterator i=ksiazki.begin(); i!=ksiazki.end(); i++, j++)
     {
         ksiazki[j]->item_export(out2);
@@ -370,6 +374,7 @@ int data_export(vector<Kategoria*> &kategorie, vector<Ksiazka*> &ksiazki, vector
     out2.close();
 
     j=0;
+    sort(ksiazki.begin(), ksiazki.end(), item_sort(&Klient::id));
     for (vector<Klient*>::iterator i=klienci.begin(); i!=klienci.end(); i++, j++)
     {
         klienci[j]->item_export(out3);
