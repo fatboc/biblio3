@@ -10,7 +10,12 @@
 #include <limits>
 #include <algorithm>
 #include <sstream>
+#include <time.h>
 #include "templates.hpp"
+
+#define MIN 60
+#define HR 3600
+#define DAY 86400
 
 using namespace std;
 
@@ -35,7 +40,7 @@ struct Ksiazka
     void print(WINDOW *);
     void modify(vector<string>& data);
     size_t find_text (string text);
-    bool check();
+    bool check(int);
     void item_export(ostream &out);
     string new_choice();
 };
@@ -53,7 +58,7 @@ struct Klient
     void print(WINDOW *);
     void modify(vector<string>& data);
     size_t find_text(string text);
-    bool check();
+    bool check(int);
     void item_export(ostream &out);
     string new_choice();
 };
@@ -69,7 +74,6 @@ struct Kategoria
     void print(WINDOW *);
     void modify(vector<string>& data);
     size_t find_text(string text);
-    bool check();
     void item_export(ostream &out);
     string new_choice();
 };

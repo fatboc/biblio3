@@ -358,7 +358,7 @@ int data_export(vector<Kategoria*> &kategorie, vector<Ksiazka*> &ksiazki, vector
     }
 
     j=0;
-    sort(ksiazki.begin(), ksiazki.end(), item_sort(&Kategoria::id));
+    sort(kategorie.begin(), kategorie.end(), item_sort(&Kategoria::id));
     for (vector<Kategoria*>::iterator i=kategorie.begin(); i!=kategorie.end(); i++, j++)
     {
         kategorie[j]->item_export(out1);
@@ -374,7 +374,7 @@ int data_export(vector<Kategoria*> &kategorie, vector<Ksiazka*> &ksiazki, vector
     out2.close();
 
     j=0;
-    sort(ksiazki.begin(), ksiazki.end(), item_sort(&Klient::id));
+    sort(klienci.begin(), klienci.end(), item_sort(&Klient::id));
     for (vector<Klient*>::iterator i=klienci.begin(); i!=klienci.end(); i++, j++)
     {
         klienci[j]->item_export(out3);
@@ -456,4 +456,29 @@ void cleanup(WINDOW *window, vector<Kategoria*> &kategorie, vector<Klient*> &kli
     delete_all(ksiazki);
 
     endwin();
+}
+
+bool Klient::check(int mode)
+{
+    if(mode==1)
+        if(pozyczone.size()>0)
+            return true;
+    else if(mode==2)
+        for(int i=0; i<pozyczone.size(); i++)
+            if(time(0)-pozyczone[i]->pozyczona > 3*DAY)
+                return true;
+
+    return false;
+}
+
+bool Ksiazka::check(int mode)
+{
+    if(mode==1&&(dostepnosc))
+        return true;
+    else if(mode==2&&(!dostepnosc))
+        return true;
+    else if(mode==3&&(time(0)-pozyczona < (time_t)3*DAY))
+        return true;
+
+    return false;
 }

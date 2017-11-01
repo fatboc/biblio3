@@ -320,7 +320,7 @@ int menu_kategorie(WINDOW * window, vector <Kategoria*>& kategorie)
     for (int i=0; i<kategorie.size(); i++)
         list_choices.push_back(kategorie[i]->new_choice());
 
-    vector<string> menu_choices {"Edytuj", "Usun", "Wroc"};
+    vector<string> menu_choices {"Edytuj", "Usun", "Wroc"}, ok {"OK"};
 
     int res=0;
 
@@ -355,6 +355,9 @@ int menu_kategorie(WINDOW * window, vector <Kategoria*>& kategorie)
                     list_choices.push_back(kategorie[i]->new_choice());
                 break;
             }
+            case -3:
+                dialog(ok, "FILTRUJ", "Brak dostepnych filtrow");
+                break;
             default:
                 break;
             }
@@ -373,11 +376,14 @@ int menu_klienci(WINDOW * window, vector <Klient*> &klienci)
 
     vector<string> menu_choices {"Edytuj", "Usun", "Wroc"};
 
-    int res;
+    int res, skip=0;
 
     do
     {
-        res = create_menu(window, list_choices, "Klienci", "ID   Imie                 Nazwisko", true);
+        if(skip==0)
+            res = create_menu(window, list_choices, "Klienci", "ID   Imie                 Nazwisko", true);
+        else
+            skip = 0;
 
         if(res>0)
             item_details(window, klienci[res-1], "KLIENCI", menu_choices);
@@ -406,6 +412,21 @@ int menu_klienci(WINDOW * window, vector <Klient*> &klienci)
                     list_choices.push_back(klienci[i]->new_choice());
                 break;
             }
+            case -3:
+            {
+                int j=0, x=-1;
+                vector<Klient*> result;
+                vector<string> choices {"Tylko wypozyczjacy", "Tylko zadluzeni"}, result_choices;
+                x = dialog(choices, "FILTRUJ", "Wybierz filtr:");
+                for (vector<Klient*>::iterator i=klienci.begin(); i!=klienci.end(); i++, j++)
+                    if(klienci[j]->check(x+1))
+                        result.push_back(klienci[j]);
+                for (int i=0; i<result.size(); i++)
+                    result_choices.push_back(result[i]->new_choice());
+                res = create_menu(window, result_choices, "WYNIKI", "ID   Imie                 Nazwisko", true);\
+                skip++;
+                break;
+            }
             default:
                 break;
             }
@@ -423,11 +444,14 @@ int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*
 
     vector<string> menu_choices {"Edytuj", "Usun", "Wroc"};
 
-    int res=0;
+    int res=0, skip=0;
 
     do
     {
-        res = create_menu(window, list_choices, "KSIAZKI", "ID   Autor                Tytul", true);
+        if (skip==0)
+            res = create_menu(window, list_choices, "KSIAZKI", "ID   Autor                Tytul", true);
+        else
+            skip = 0;
 
         if(res>0)
             item_details(window, ksiazki[res-1], "KSIAZKI", menu_choices);
@@ -454,6 +478,21 @@ int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*
                 list_choices.clear();
                 for (int i=0; i<ksiazki.size(); i++)
                     list_choices.push_back(ksiazki[i]->new_choice());
+                break;
+            }
+            case -3:
+            {
+                int j=0, x=-1;
+                vector<Ksiazka*> result;
+                vector<string> choices {"Tylko dostepne", "Tylko wypozyczone", "Tylko przetrzymane"}, result_choices;
+                x = dialog(choices, "FILTRUJ", "Wybierz filtr:");
+                for (vector<Ksiazka*>::iterator i=ksiazki.begin(); i!=ksiazki.end(); i++, j++)
+                    if(ksiazki[j]->check(x+1))
+                        result.push_back(ksiazki[j]);
+                for (int i=0; i<result.size(); i++)
+                    result_choices.push_back(result[i]->new_choice());
+                res = create_menu(window, result_choices, "WYNIKI", "ID   Autor                Tytul", true);
+                skip++;
                 break;
             }
             default:
