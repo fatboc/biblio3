@@ -1,8 +1,8 @@
 # depslib dependency file v1.0
-1509555853 source:/home/fatusia/Documents/C++/biblioteka_nowy/data.cpp
+1509574132 source:/home/fatusia/Documents/C++/biblioteka_nowy/data.cpp
 	"header.hpp"
 
-1509532615 /home/fatusia/Documents/C++/biblioteka_nowy/header.hpp
+1509575288 /home/fatusia/Documents/C++/biblioteka_nowy/header.hpp
 	<ncurses.h>
 	<menu.h>
 	<form.h>
@@ -21,7 +21,7 @@
 1509457450 source:/home/fatusia/Documents/C++/biblioteka_nowy/main.cpp
 	"header.hpp"
 
-1509555973 source:/home/fatusia/Documents/C++/biblioteka_nowy/user.cpp
+1509573786 source:/home/fatusia/Documents/C++/biblioteka_nowy/user.cpp
 	"header.hpp"
 
 1509231511 /home/fatusia/Documents/C++/biblioteka_nowy/data.cpp

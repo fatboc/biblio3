@@ -1,5 +1,11 @@
 #include "header.hpp"
 
+void elo()
+{
+    vector<string> ok{"OK"};
+    dialog(ok, "ELO", "elo.");
+}
+
 int create_menu(WINDOW * window, vector<string> &list_choices, string header, string guide, bool upper_present)
 //generowanie dowolnego menu
 {
@@ -339,7 +345,7 @@ int menu_kategorie(WINDOW * window, vector <Kategoria*>& kategorie)
             {
             case -1:
             {
-                string text = search_form();
+                string text = search_form("Wprowadz wyszukiwana fraze:");
                 if (text.size()!=0)
                 {
                     int j=0, x=-1;
@@ -381,6 +387,31 @@ int menu_kategorie(WINDOW * window, vector <Kategoria*>& kategorie)
             case -3:
                 dialog(ok, "FILTRUJ", "Brak dostepnych filtrow");
                 break;
+            case -4:
+            {
+                vector<string> result, data, fields {"Symbol:", "Nazwa:", "ID:"};
+                for(int i=0; i<3; i++)
+                    data.push_back("Podaj wartosc");
+                    string ex1 = "Operacja przerwana.";
+                    try
+                    {
+                        if(item_form(window, "NOWA KATEGORIA", fields, data, result)!=1) throw ex1;
+                        add_category(kategorie, result);
+                    }
+                    catch(string ex)
+                    {
+                        dialog(ok, "NOWY", ex);
+                        break;
+                    }
+                    catch(...)
+                    {
+                        dialog(ok, "NOWY", "Cos poszlo nie tak.");
+                        break;
+                    }
+                list_choices.push_back(kategorie.back()->new_choice());
+                dialog(ok, "NOWY", "Zapisano pomyslnie.");
+                break;
+            }
             default:
                 break;
             }
@@ -416,7 +447,7 @@ int menu_klienci(WINDOW * window, vector <Klient*> &klienci)
             {
             case -1:
             {
-                string text = search_form();
+                string text = search_form("Wprowadz wyszukiwana fraze:");
                 if (text.size()!=0)
                 {
                     int j=0, x=-1;
@@ -470,6 +501,31 @@ int menu_klienci(WINDOW * window, vector <Klient*> &klienci)
                 skip++;
                 break;
             }
+            case -4:
+            {
+                vector<string> result, data, fields {"Imie:", "Nazwisko:", "ID:", "Adres:", "Telefon:"};
+                for(int i=0; i<5; i++)
+                    data.push_back("Podaj wartosc");
+                    string ex1 = "Operacja przerwana.";
+                    try
+                    {
+                        if(item_form(window, "NOWY KLIENT", fields, data, result)!=1) throw ex1;
+                        add_client(klienci, result);
+                    }
+                    catch(string ex)
+                    {
+                        dialog(ok, "NOWY", ex);
+                        break;
+                    }
+                    catch(...)
+                    {
+                        dialog(ok, "NOWY", "Cos poszlo nie tak.");
+                        break;
+                    }
+                list_choices.push_back(klienci.back()->new_choice());
+                dialog(ok, "NOWY", "Zapisano pomyslnie.");
+                break;
+            }
             default:
                 break;
             }
@@ -504,7 +560,7 @@ int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*
             {
             case -1:
             {
-                string text = search_form();
+                string text = search_form("Wprowadz wyszukiwana fraze:");
                 if (text.size()!=0)
                 {
                     int j=0, x=-1;
@@ -558,6 +614,35 @@ int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*
                 skip++;
                 break;
             }
+            case -4:
+            {
+                vector<string> result, data, fields {"Autor:", "Tytul:", "ID:", "Rok wydania:"};
+                for(int i=0; i<4; i++)
+                    data.push_back("Podaj wartosc");
+                    string ex1 = "Operacja przerwana.", kat;
+                    try
+                    {
+                        if(item_form(window, "NOWA KSIAZKA", fields, data, result)!=1) throw ex1;
+                        kat = search_form("Podaj numer kategorii:");
+                        if(kat=="") throw ex1;
+                        result.push_back(kat);
+                        if(add_book(ksiazki, kategorie, result)!=0) throw 0;
+
+                    }
+                    catch(string ex)
+                    {
+                        dialog(ok, "NOWY", ex);
+                        break;
+                    }
+                    catch(...)
+                    {
+                        dialog(ok, "NOWY", "Cos poszlo nie tak.");
+                        break;
+                    }
+                list_choices.push_back(ksiazki.back()->new_choice());
+                dialog(ok, "NOWY", "Zapisano pomyslnie.");
+                break;
+            }
             default:
                 break;
             }
@@ -594,7 +679,7 @@ void zapisz(vector<Kategoria*> &kategorie, vector<Ksiazka*> &ksiazki, vector<Kli
     dialog(ok, "ZAPISZ", info);
 }
 
-string search_form()
+string search_form(string text)
 {
     WINDOW *pop_up, *menu_window, *form_window;
     MENU* menu;
@@ -639,7 +724,7 @@ string search_form()
     post_menu(menu);
 
     mvwprintw(pop_up, 1, (width-6)/2,"%s", "SZUKAJ");
-    mvwprintw(pop_up, 3, 2, "%s", "Wprowadz wyszukiwana fraze:");
+    mvwprintw(pop_up, 3, 2, "%s", text.c_str());
 
 
     field[0] = new_field(1, 40, 0, 0, 0, 0);
@@ -753,6 +838,195 @@ string search_form()
     curs_set(0);
 
     return result;
+}
 
+int item_form(WINDOW * window, string header, vector<string> &fields, vector<string> &data, vector<string> &result)
+{
+    WINDOW *menu_window, *form_window, *current_window;
+    MENU * menu;
+    FORM * form;
+    int n = fields.size();
+    FIELD *field[n+1];
+    ITEM ** items;
+    bool upper_active = false;
+    vector<string> menu_choices {"Zapisz", "Wroc"};
+    int res=-1, c, m=menu_choices.size(), j=0;
+    int height=LINES, width=COLS, starty=(LINES-height)/2, startx=(COLS-width)/2;
+
+    init_pair(1, COLOR_WHITE, COLOR_BLUE);
+    init_pair(2, COLOR_WHITE, COLOR_RED);
+    init_pair(3, COLOR_BLUE, COLOR_WHITE);
+    init_pair(4, COLOR_BLACK, COLOR_CYAN);
+    init_pair(5, COLOR_BLACK, COLOR_WHITE);
+
+    wclear(window);
+    box(window, 0, 0);
+    mvwprintw(window, 1, (width-header.length())/2,"%s", header.c_str());
+
+//form
+    for (int i=0; i<n; i++)
+    {
+        field[i] = new_field(1, 35, i*2, startx+20, 0, 0);
+    }
+    field[n] = NULL;
+
+    form = new_form(field);
+    form_window = subwin(window, height-6, width-2, starty+4, startx+1);
+    set_form_win(form, form_window);
+    set_form_sub(form, form_window);
+    box(form_window, 0, 0);
+
+    form_opts_off(form, O_NL_OVERLOAD);
+    form_opts_off(form, O_BS_OVERLOAD);
+
+    for (int i=0; i<n; i++)
+    {
+        set_field_buffer(field[i], 0, data[i].c_str());
+        field_opts_on(field[i], O_PASSOK);
+        field_opts_off(field[i], O_AUTOSKIP);
+    }
+
+    post_form(form);
+
+    for(vector<string>::iterator i=fields.begin(); i!=fields.end(); i++, j++)
+        mvwprintw(form_window, j*2, startx+4, "%s", fields[j].c_str());
+
+    curs_set(1);
+    refresh();
+    form_driver(form, REQ_END_LINE);
+    wrefresh(form_window);
+
+//gorne menu
+    items = (ITEM**)calloc(m+1, sizeof(ITEM*));
+    j=0;
+    for(vector<string>::iterator i=menu_choices.begin(); i!=menu_choices.end(); i++, j++)
+        items[j] = new_item(menu_choices[j].c_str(), "");
+    items[m] = (ITEM*)NULL;
+
+    menu = new_menu(items);
+
+    menu_window = subwin(window, 1, width-2, starty+2, startx+1);
+    set_menu_win(menu, menu_window);
+    set_menu_sub(menu, menu_window);
+
+    wbkgd(menu_window, COLOR_PAIR(3));
+    set_menu_back(menu, COLOR_PAIR(3));
+    set_menu_fore(menu, COLOR_PAIR(5));
+    set_menu_format(menu, 1, menu_choices.size());
+    set_menu_mark(menu, " ");
+    set_menu_spacing(menu, 0, 0, 3);
+
+    post_menu(menu);
+    refresh();
+    wrefresh(menu_window);
+
+//sterowanie
+    while((c=wgetch(window)) != KEY_F(1))
+    {
+        if(upper_active)
+        {
+            current_window = menu_window;
+        }
+        else
+        {
+            current_window = form_window;
+        }
+
+        switch(c)
+        {
+        case KEY_UP:
+            if(!upper_active)
+            {
+                form_driver(form, REQ_PREV_FIELD);
+                form_driver(form, REQ_END_FIELD);
+                break;
+            }
+        case KEY_LEFT:
+            if(upper_active)
+                menu_driver(menu, REQ_PREV_ITEM);
+            else
+                form_driver(form, REQ_PREV_CHAR);
+            break;
+        case KEY_DOWN:
+            if(!upper_active)
+            {
+                form_driver(form, REQ_NEXT_FIELD);
+                form_driver(form, REQ_END_FIELD);
+                break;
+            }
+        case KEY_RIGHT:
+            if(upper_active)
+                menu_driver(menu, REQ_NEXT_ITEM);
+            else
+                form_driver(form, REQ_NEXT_CHAR);
+            break;
+        case '\t':
+        {
+            if (upper_active)
+            {
+                form_driver(form, REQ_PREV_FIELD);
+                set_menu_fore(menu, COLOR_PAIR(5));
+                curs_set(1);
+                wrefresh(menu_window);
+            }
+            else
+            {
+                form_driver(form, REQ_NEXT_FIELD);
+                set_menu_fore(menu, COLOR_PAIR(2));
+                curs_set(0);
+                wrefresh(menu_window);
+            }
+            upper_active = !upper_active;
+            break;
+        }
+        case 10:
+        {
+            if (upper_active)
+                res = item_index(current_item(menu))+1;
+            else
+            {
+                form_driver(form, REQ_NEXT_FIELD);
+                form_driver(form, REQ_END_FIELD);
+            }
+            break;
+        }
+        case KEY_BACKSPACE:
+        {
+            if(!upper_active)
+                form_driver(form, REQ_DEL_PREV);
+            break;
+        }
+        default:
+            if(!upper_active)
+                form_driver(form, c);
+            break;
+        }
+        if (res!=-1)
+        {
+            curs_set(0);
+            break;
+        }
+        wrefresh(current_window);
+    }
+
+    for(int i=0; i<m; i++)
+        free_item(items[i]);
+    free_menu(menu);
+
+    unpost_form(form);
+    free_form(form);
+
+    if(res==1)
+        for(int i=0; i<n; i++)
+        {
+            char * tmp = field_buffer(field[i], 0);
+            tmp = trim(tmp);
+            result.push_back(tmp);
+        }
+
+    for (int i=0; i<n; i++)
+        free_field(field[i]);
+
+    return res;
 }
 

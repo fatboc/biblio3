@@ -237,19 +237,20 @@ void Ksiazka::modify(vector<string>& data)
     rok_wydania = data[3];
 }
 
-void add_book(vector<Ksiazka*> &ksiazki, vector<Kategoria*> &kategorie, vector<string> &data)
+int add_book(vector<Ksiazka*> &ksiazki, vector<Kategoria*> &kategorie, vector<string> &data)
 {
+    vector<string> ok{"OK"};
     int kat_no = find_id(kategorie, stoi(data[4]));
     try
     {
         if (data.size()<5) throw "Za malo danych.";
-        if (find_id(ksiazki, atoi(data[2].c_str()))!=-1) throw "ID juz istnieje";
+        if (find_id(ksiazki, atoi(data[2].c_str()))!=-1) throw "ID ksiazki juz istnieje";
         if (kat_no==-1) throw "Bledna kateogria";
     }
     catch(const char * ex)
     {
-        cout << ex << endl;
-        exit(EXIT_FAILURE);
+        dialog(ok, "NOWY", ex);
+        return(-1);
     }
     Ksiazka * new_book = new Ksiazka;
 
@@ -262,9 +263,11 @@ void add_book(vector<Ksiazka*> &ksiazki, vector<Kategoria*> &kategorie, vector<s
     new_book->modify(data);
     ksiazki.push_back(new_book);
 
+    return 0;
+
 }
 
-void add_client(vector<Klient*> &klienci, vector<string> &data)
+int add_client(vector<Klient*> &klienci, vector<string> &data)
 {
     try
     {
@@ -273,7 +276,7 @@ void add_client(vector<Klient*> &klienci, vector<string> &data)
     catch(const char * ex)
     {
         cout << ex << endl;
-        exit(EXIT_FAILURE);
+        return -1;
     }
 
     Klient * new_client = new Klient;
@@ -281,9 +284,11 @@ void add_client(vector<Klient*> &klienci, vector<string> &data)
     new_client->modify(data);
 
     klienci.push_back(new_client);
+
+    return 0;
 }
 
-void add_category(vector<Kategoria*> &kategorie, vector<string> &data)
+int add_category(vector<Kategoria*> &kategorie, vector<string> &data)
 {
     try
     {
@@ -292,7 +297,7 @@ void add_category(vector<Kategoria*> &kategorie, vector<string> &data)
     catch(const char * ex)
     {
         cout << ex << endl;
-        exit(EXIT_FAILURE);
+        return -1;
     }
 
     Kategoria * new_category  = new Kategoria;
@@ -300,6 +305,8 @@ void add_category(vector<Kategoria*> &kategorie, vector<string> &data)
     new_category->modify(data);
 
     kategorie.push_back(new_category);
+
+    return 0;
 }
 
 void Kategoria::item_export(ostream& out)
