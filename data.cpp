@@ -473,12 +473,76 @@ bool Klient::check(int mode)
 
 bool Ksiazka::check(int mode)
 {
+    time_t tmp = 3*DAY;
     if(mode==1&&(dostepnosc))
         return true;
     else if(mode==2&&(!dostepnosc))
         return true;
-    else if(mode==3&&(time(0)-pozyczona < (time_t)3*DAY))
+    else if(mode==3&&((time(0)-pozyczona) < tmp))
         return true;
 
     return false;
+}
+
+char * trim(char * text)
+{
+    int n = strlen(text);
+    for(int i=0; i<n-1; i++)
+        if(text[i]==' '&&(text[i+1]==' '||text[i+1]=='\0'))
+            text[i] = '\0';
+
+    return (text);
+}
+
+size_t Ksiazka::find_text(string text)
+{
+    size_t pos = autor.find(text);
+    if(pos == string::npos)
+    {
+        pos = tytul.find(text);
+        if(pos == string::npos)
+        {
+            string numer;
+            char tmp[4];
+            sprintf(tmp, "%d", id);
+            numer = tmp;
+            pos = numer.find(text);
+        }
+    }
+    return pos;
+}
+
+size_t Kategoria::find_text(string text)
+{
+    size_t pos = symbol.find(text);
+    if(pos == string::npos)
+        pos = nazwa.find(text);
+        if(pos == string::npos)
+        {
+            string numer;
+            char tmp[4];
+            sprintf(tmp, "%d", id);
+            numer = tmp;
+            pos = numer.find(text);
+        }
+
+    return pos;
+}
+
+size_t Klient::find_text(string text)
+{
+    size_t pos = imie.find(text);
+    if(pos == string::npos)
+    {
+        pos = nazwisko.find(text);
+        if(pos == string::npos)
+        {
+            string numer;
+            char tmp[4];
+            sprintf(tmp, "%d", id);
+            numer = tmp;
+            pos = numer.find(text);
+        }
+    }
+    return pos;
 }

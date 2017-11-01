@@ -5,13 +5,13 @@ using namespace std;
 template<typename T, typename M>
 struct item_cmp
 {
-    M T::*member2;
+    M T::*member;
 
-    item_cmp(M T::*member) : member2(member) {}
+    item_cmp(M T::*nmember) : member(nmember) {}
 
     bool operator()(T *a, T *b) const
     {
-        return a->*member2 < b->*member2;
+        return a->*member < b->*member;
     }
 };
 

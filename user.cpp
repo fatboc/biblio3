@@ -322,11 +322,14 @@ int menu_kategorie(WINDOW * window, vector <Kategoria*>& kategorie)
 
     vector<string> menu_choices {"Edytuj", "Usun", "Wroc"}, ok {"OK"};
 
-    int res=0;
+    int res=0, skip=0;
 
     do
     {
-        res = create_menu(window, list_choices, "KATEGORIE", "ID   Symbol  Nazwa", true);
+        if (skip==0)
+            res = create_menu(window, list_choices, "KATEGORIE", "ID   Symbol  Nazwa", true);
+        else
+            skip=0;
 
         if (res>0)
             item_details(window, kategorie[res-1], "KATEGORIE", menu_choices);
@@ -334,6 +337,26 @@ int menu_kategorie(WINDOW * window, vector <Kategoria*>& kategorie)
         else
             switch(res)
             {
+            case -1:
+            {
+                string text = search_form();
+                if (text.size()!=0)
+                {
+                    int j=0, x=-1;
+                    vector<Kategoria*> result;
+                    vector<string> result_choices;
+                    for (vector<Kategoria*>::iterator i=kategorie.begin(); i!=kategorie.end(); i++, j++)
+                        if(kategorie[j]->find_text(text)!=string::npos)
+                            result.push_back(kategorie[j]);
+                    for (int i=0; i<result.size(); i++)
+                        result_choices.push_back(result[i]->new_choice());
+                    res = create_menu(window, result_choices, "WYNIKI", "ID   Symbol  Nazwa", true);
+                    skip++;
+                }
+                else
+                    dialog(ok, "SZUKAJ", "Brak wynikow.");
+                break;
+            }
             case -2:
             {
                 vector<string> choices {"Wg numeru", "Wg symbolu", "Wg nazwy"};
@@ -374,7 +397,7 @@ int menu_klienci(WINDOW * window, vector <Klient*> &klienci)
     for (int i=0; i<klienci.size(); i++)
         list_choices.push_back(klienci[i]->new_choice());
 
-    vector<string> menu_choices {"Edytuj", "Usun", "Wroc"};
+    vector<string> menu_choices {"Edytuj", "Usun", "Wroc"}, ok{"OK"};
 
     int res, skip=0;
 
@@ -391,6 +414,26 @@ int menu_klienci(WINDOW * window, vector <Klient*> &klienci)
         else
             switch(res)
             {
+            case -1:
+            {
+                string text = search_form();
+                if (text.size()!=0)
+                {
+                    int j=0, x=-1;
+                    vector<Klient*> result;
+                    vector<string> result_choices;
+                    for (vector<Klient*>::iterator i=klienci.begin(); i!=klienci.end(); i++, j++)
+                        if(klienci[j]->find_text(text)!=string::npos)
+                            result.push_back(klienci[j]);
+                    for (int i=0; i<result.size(); i++)
+                        result_choices.push_back(result[i]->new_choice());
+                    res = create_menu(window, result_choices, "WYNIKI", "ID   Imie                 Nazwisko", true);
+                    skip++;
+                }
+                else
+                    dialog(ok, "SZUKAJ", "Brak wynikow.");
+                break;
+            }
             case -2:
             {
                 vector<string> choices {"Wg numeru", "Wg imienia", "Wg nazwiska"};
@@ -442,7 +485,7 @@ int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*
     for (int i=0; i<ksiazki.size(); i++)
         list_choices.push_back(ksiazki[i]->new_choice());
 
-    vector<string> menu_choices {"Edytuj", "Usun", "Wroc"};
+    vector<string> menu_choices {"Edytuj", "Usun", "Wroc"}, ok{"OK"};
 
     int res=0, skip=0;
 
@@ -459,6 +502,26 @@ int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*
         else
             switch(res)
             {
+            case -1:
+            {
+                string text = search_form();
+                if (text.size()!=0)
+                {
+                    int j=0, x=-1;
+                    vector<Ksiazka*> result;
+                    vector<string> result_choices;
+                    for (vector<Ksiazka*>::iterator i=ksiazki.begin(); i!=ksiazki.end(); i++, j++)
+                        if(ksiazki[j]->find_text(text)!=string::npos)
+                            result.push_back(ksiazki[j]);
+                    for (int i=0; i<result.size(); i++)
+                        result_choices.push_back(result[i]->new_choice());
+                    res = create_menu(window, result_choices, "WYNIKI", "ID   Autor                Tytul", true);
+                    skip++;
+                }
+                else
+                    dialog(ok, "SZUKAJ", "Brak wynikow.");
+                break;
+            }
             case -2:
             {
                 vector<string> choices {"Wg numeru", "Wg autora", "Wg tytulu"};
@@ -530,3 +593,166 @@ void zapisz(vector<Kategoria*> &kategorie, vector<Ksiazka*> &ksiazki, vector<Kli
 
     dialog(ok, "ZAPISZ", info);
 }
+
+string search_form()
+{
+    WINDOW *pop_up, *menu_window, *form_window;
+    MENU* menu;
+    ITEM ** items;
+    FIELD *field[2];
+    FORM * form;
+
+    char * choices[] = {"Szukaj", "Wroc"};
+
+    items = (ITEM **)calloc(2, sizeof(ITEM *));
+
+    for (int i=0; i<2; i++)
+        items[i]=new_item(choices[i], "");
+    items[2] = (ITEM *)NULL;
+
+    menu = new_menu(items);
+    int height = 10, width = 50, starty = (LINES-height)/2, startx = (COLS-width)/2;
+
+    init_pair(1, COLOR_WHITE, COLOR_RED);
+    init_pair(2, COLOR_BLUE, COLOR_WHITE);
+    init_pair(3, COLOR_BLACK, COLOR_WHITE);
+
+    pop_up = newwin(height, width, starty, startx);
+    keypad(pop_up, TRUE);
+    menu_window = subwin(pop_up, 1, 15, starty+7, startx+16);
+    set_menu_win(menu, menu_window);
+    set_menu_sub(menu, menu_window);
+    keypad(menu_window, TRUE);
+    refresh();
+
+    wbkgd(pop_up, COLOR_PAIR(1));
+    box(pop_up, 0, 0);
+    mvwaddch(pop_up, 2, 0, ACS_LTEE);
+    mvwhline(pop_up, 2, 1, ACS_HLINE, width-2);
+    mvwaddch(pop_up, 2, width-1, ACS_RTEE);
+    set_menu_back(menu, COLOR_PAIR(1));
+    set_menu_fore(menu, A_REVERSE | COLOR_PAIR(1));
+
+    set_menu_mark(menu, "  ");
+    set_menu_format(menu, 1, 2);
+
+    post_menu(menu);
+
+    mvwprintw(pop_up, 1, (width-6)/2,"%s", "SZUKAJ");
+    mvwprintw(pop_up, 3, 2, "%s", "Wprowadz wyszukiwana fraze:");
+
+
+    field[0] = new_field(1, 40, 0, 0, 0, 0);
+    field[1] = NULL;
+    field_opts_off(field[0], O_AUTOSKIP);
+
+    /* Create the form and post it */
+    form = new_form(field);
+    form_window = subwin(pop_up, 1, 40, starty+5, startx+5);
+    wbkgd(form_window, COLOR_PAIR(2));
+    set_form_win(form, form_window);
+    set_form_sub (form, form_window);
+    keypad(form_window, TRUE);
+
+    post_form(form);
+    refresh();
+
+
+    wrefresh(menu_window);
+
+    wrefresh(pop_up);
+    wrefresh(form_window);
+
+
+    bool lower_active = false;
+    WINDOW * current_window;
+    int x=-1, c;
+
+    while((c = wgetch(pop_up)) != KEY_F(1))
+    {
+        if (lower_active)
+        {
+            current_window = menu_window;
+            curs_set(0);
+        }
+        else
+        {
+            current_window = form_window;
+            curs_set(1);
+        }
+        switch(c)
+        {
+        case KEY_LEFT:
+            if(lower_active)
+                menu_driver(menu, REQ_PREV_ITEM);
+            else
+                form_driver(form, REQ_PREV_CHAR);
+            break;
+        case KEY_RIGHT:
+            if(lower_active)
+                menu_driver(menu, REQ_NEXT_ITEM);
+            else
+                form_driver(form, REQ_NEXT_CHAR);
+            break;
+        case '\t':
+        {
+            if (lower_active)
+                set_menu_fore(menu, A_REVERSE | COLOR_PAIR(1));
+            else
+                set_menu_fore(menu, COLOR_PAIR(3));
+            form_driver(form, REQ_NEXT_FIELD);
+            lower_active = !lower_active;
+            wrefresh(menu_window);
+            break;
+        }
+        case 10:
+        {
+            if (!lower_active)
+                 form_driver(form, REQ_NEXT_FIELD);
+            x = item_index(current_item(menu))+1;
+            /*else
+            {
+                form_driver(form, REQ_NEXT_FIELD);
+                lower_active = true;
+                if (lower_active)
+                    set_menu_fore(menu, A_REVERSE | COLOR_PAIR(1));
+                wrefresh(menu_window);
+            }*/
+            break;
+        }
+        case KEY_BACKSPACE:
+        {
+            if(!lower_active)
+                form_driver(form, REQ_DEL_PREV);
+            break;
+        }
+        default:
+            if(!lower_active)
+                form_driver(form, c);
+            break;
+        }
+        if (x!=-1) break;
+        wrefresh(current_window);
+    }
+
+
+    for (int i=0; i<2; i++) free_item(items[i]);
+    string result = "";
+    if(x==1)
+    {
+        result = field_buffer(field[0], 0);
+        char tmp[result.length()];
+        strcpy(tmp, result.c_str());
+        result = trim(tmp);
+    }
+    free_field(field[0]);
+    free_field(field[1]);
+    free_form(form);
+    free_menu(menu);
+    delwin(pop_up);
+    curs_set(0);
+
+    return result;
+
+}
+
