@@ -297,7 +297,7 @@ int menu_main(WINDOW* window, vector<Kategoria*> &kategorie, vector<Ksiazka*>& k
             break;
 
         case 3:
-            menu_kategorie(window, kategorie);
+            menu_kategorie(window, kategorie, ksiazki);
             break;
 
         case 4:
@@ -319,7 +319,7 @@ int menu_main(WINDOW* window, vector<Kategoria*> &kategorie, vector<Ksiazka*>& k
     return 0;
 }
 
-int menu_kategorie(WINDOW * window, vector <Kategoria*>& kategorie)
+int menu_kategorie(WINDOW * window, vector <Kategoria*>& kategorie, vector<Ksiazka*> &ksiazki)
 {
     vector<string> list_choices;
 
@@ -328,7 +328,7 @@ int menu_kategorie(WINDOW * window, vector <Kategoria*>& kategorie)
 
     vector<string> menu_choices {"Edytuj", "Usun", "Wroc"}, ok {"OK"};
 
-    int res=0, skip=0;
+    int res=0, skip=0, x=0;
 
     do
     {
@@ -338,8 +338,73 @@ int menu_kategorie(WINDOW * window, vector <Kategoria*>& kategorie)
             skip=0;
 
         if (res>0)
-            item_details(window, kategorie[res-1], "KATEGORIE", menu_choices);
+        {
+            x = item_details(window, kategorie[res-1], "KATEGORIE", menu_choices);
+            switch(x)
+            {
+            case -1:
+            {
+                vector<string> result, data, fields {"Symbol:", "Nazwa:", "ID:"};
+                string tmp, ex1 = "Operacja przerwana.";
+                data.push_back(kategorie[res-1]->symbol);
+                data.push_back(kategorie[res-1]->nazwa);
+                data.push_back(to_string(kategorie[res-1]->id));
 
+                    try
+                    {
+                        int nr;
+                        if(item_form(window, "EDYTUJ", fields, data, result)!=1) throw ex1;
+                        (stringstream)result[2]>>nr;
+                        if(find_id(kategorie,nr)!=-1&&find_id(kategorie, nr)!=res-1) throw "ID juz istnieje.";
+                        kategorie[res-1]->modify(result);
+                    }
+                    catch(string ex)
+                    {
+                        dialog(ok, "EDYTUJ", ex);
+                        break;
+                    }
+                    catch(...)
+                    {
+                        dialog(ok, "EDYTUJ", "Cos poszlo nie tak.");
+                        break;
+                    }
+                int j=0;
+                list_choices[res-1] = kategorie[res-1]->new_choice();
+                dialog(ok, "EDYTUJ", "Zapisano pomyslnie.");
+                break;
+            }
+            case -2:
+            {
+                int j=0;
+
+                vector<string>::iterator i;
+
+                for(vector<Ksiazka*>::iterator i=kategorie[res-1]->nalezace.begin(); i!=kategorie[res-1]->nalezace.end(); i++, j++)
+                {
+                    int pos = find_id(ksiazki, kategorie[res-1]->nalezace[j]->id);
+                    int m=0;
+                    vector<Ksiazka*>::iterator n;
+                    for(n=ksiazki.begin(); n!=ksiazki.end(); n++, m++)
+                        if(m==pos) break;
+                    ksiazki.erase(n);
+                }
+
+                delete_all(kategorie[res-1]->nalezace);
+
+                j=0;
+                for(i=list_choices.begin(); i!=list_choices.end(); i++, j++)
+                    if(j==res-1) break;
+                list_choices.erase(i);
+
+                delete_item(kategorie, res-1);
+
+                dialog(ok, "USUN", "Pozycja usunieta.");
+                break;
+            }
+            default:
+                break;
+            }
+        }
         else
             switch(res)
             {
@@ -430,7 +495,7 @@ int menu_klienci(WINDOW * window, vector <Klient*> &klienci)
 
     vector<string> menu_choices {"Edytuj", "Usun", "Wroc"}, ok{"OK"};
 
-    int res, skip=0;
+    int res, skip=0, x=0;
 
     do
     {
@@ -440,8 +505,62 @@ int menu_klienci(WINDOW * window, vector <Klient*> &klienci)
             skip = 0;
 
         if(res>0)
-            item_details(window, klienci[res-1], "KLIENCI", menu_choices);
+        {
+            x = item_details(window, klienci[res-1], "KLIENCI", menu_choices);
+            switch(x)
+            {
+            case -1:
+            {
+                vector<string> result, data, fields {"Imie:", "Nazwisko:", "ID:", "Adres:", "Telefon:"};
+                string tmp, ex1 = "Operacja przerwana.";
+                data.push_back(klienci[res-1]->imie);
+                data.push_back(klienci[res-1]->nazwisko);
+                data.push_back(to_string(klienci[res-1]->id));
+                data.push_back(klienci[res-1]->adres);
+                data.push_back(klienci[res-1]->telefon);
 
+                    try
+                    {
+                        int nr;
+                        if(item_form(window, "EDYTUJ", fields, data, result)!=1) throw ex1;
+                        (stringstream)result[2]>>nr;
+                        if(find_id(klienci,nr)!=-1&&find_id(klienci, nr)!=res-1) throw "ID juz istnieje.";
+                        klienci[res-1]->modify(result);
+                    }
+                    catch(string ex)
+                    {
+                        dialog(ok, "EDYTUJ", ex);
+                        break;
+                    }
+                    catch(...)
+                    {
+                        dialog(ok, "EDYTUJ", "Cos poszlo nie tak.");
+                        break;
+                    }
+                int j=0;
+                list_choices[res-1] = klienci[res-1]->new_choice();
+                dialog(ok, "EDYTUJ", "Zapisano pomyslnie.");
+                break;
+            }
+            case -2:
+            {
+                int j=0;
+
+                vector<string>::iterator i;
+
+                for(i=list_choices.begin(); i!=list_choices.end(); i++, j++)
+                    if(j==res-1) break;
+                list_choices.erase(i);
+
+                delete_item(klienci, res-1);
+
+                dialog(ok, "USUN", "Pozycja usunieta.");
+                break;
+            }
+            default:
+                break;
+            }
+        }
         else
             switch(res)
             {
@@ -543,7 +662,7 @@ int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*
 
     vector<string> menu_choices {"Edytuj", "Usun", "Wroc"}, ok{"OK"};
 
-    int res=0, skip=0;
+    int res=0, skip=0, x=0;
 
     do
     {
@@ -553,8 +672,79 @@ int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*
             skip = 0;
 
         if(res>0)
-            item_details(window, ksiazki[res-1], "KSIAZKI", menu_choices);
+        {
+            x = item_details(window, ksiazki[res-1], "KSIAZKI", menu_choices);
+            switch(x)
+            {
+            case -1:
+            {
+                vector<string> result, data, fields {"Autor:", "Tytul:", "ID:", "Rok wydania:"};
+                string tmp, ex1 = "Operacja przerwana.";
+                data.push_back(ksiazki[res-1]->autor);
+                data.push_back(ksiazki[res-1]->tytul);
+                data.push_back(to_string(ksiazki[res-1]->id));
+                data.push_back(ksiazki[res-1]->rok_wydania);
 
+                    try
+                    {
+                        int nr;
+                        if(item_form(window, "EDYTUJ", fields, data, result)!=1) throw ex1;
+                        (stringstream)result[2]>>nr;
+                        if(find_id(ksiazki,nr)!=-1&&find_id(ksiazki, nr)!=res-1) throw "ID juz istnieje.";
+                        ksiazki[res-1]->modify(result);
+                    }
+                    catch(string ex)
+                    {
+                        dialog(ok, "EDYTUJ", ex);
+                        break;
+                    }
+                    catch(...)
+                    {
+                        dialog(ok, "EDYTUJ", "Cos poszlo nie tak.");
+                        break;
+                    }
+                int j=0;
+                list_choices[res-1] = ksiazki[res-1]->new_choice();
+                dialog(ok, "EDYTUJ", "Zapisano pomyslnie.");
+                break;
+            }
+            case -2:
+            {
+                int j=0, n;
+
+                try
+                {
+                    if(!ksiazki[res-1]->dostepnosc) throw "Ksiazka jest wypozyczona.";
+                    if((n = find_id(ksiazki[res-1]->kat->nalezace, ksiazki[res-1]->id))<0) throw "Cos nie pyklo.";
+                }
+                catch (const char * ex)
+                {
+                    dialog(ok, "USUN", ex);
+                    break;
+                }
+
+                vector<Ksiazka*>::iterator i;
+                vector<string>::iterator l;
+
+                for(i=ksiazki[res-1]->kat->nalezace.begin(); i!=ksiazki[res-1]->kat->nalezace.end(); i++, j++)
+                    if(j==n) break;
+                ksiazki[res-1]->kat->nalezace.erase(i);
+
+                j=0;
+                for(l=list_choices.begin(); l!=list_choices.end(); l++, j++)
+                    if(j==res-1) break;
+                list_choices.erase(l);
+
+                delete_item(ksiazki, res-1);
+
+                dialog(ok, "USUN", "Pozycja usunieta.");
+                break;
+            }
+            default:
+                break;
+            }
+
+        }
         else
             switch(res)
             {

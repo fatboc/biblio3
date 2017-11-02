@@ -51,6 +51,7 @@ void delete_all(vector <T*>& data)
             delete tmp;
         }
     }
+    data.clear();
 }
 
 template <typename T>

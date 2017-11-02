@@ -1,0 +1,11 @@
+Zostalo
+
+- wypozyczanie
+- scrolling
+- time_t na inty (bo filtrowanie nie dziala)
+- kolorki
+- guide na string
+- instrukcje
+- dialogi przy usuwaniu
+- wyczyscic
+- zabawa - dodam tam cale bbk

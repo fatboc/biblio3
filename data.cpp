@@ -13,6 +13,7 @@ int data_import(vector <Kategoria*> &kategorie, vector <Klient*> &klienci, vecto
     while (!in1.eof())
     {
         Kategoria *new_cat = new Kategoria;
+        tmp = "";
 
         getline(in1, new_cat->nazwa);
         getline(in1, new_cat->symbol);
@@ -31,6 +32,7 @@ int data_import(vector <Kategoria*> &kategorie, vector <Klient*> &klienci, vecto
     {
         Ksiazka *new_book = new Ksiazka;
         int m;
+        tmp = "";
 
         getline(in2, new_book->tytul);
         getline(in2, new_book->autor);
@@ -63,6 +65,7 @@ int data_import(vector <Kategoria*> &kategorie, vector <Klient*> &klienci, vecto
     while (!in3.eof())
     {
         Klient *new_client  = new Klient;
+        tmp = "";
 
         getline(in3, new_client->imie);
         getline(in3, new_client->nazwisko);
@@ -239,7 +242,7 @@ void Ksiazka::modify(vector<string>& data)
 
 int add_book(vector<Ksiazka*> &ksiazki, vector<Kategoria*> &kategorie, vector<string> &data)
 {
-    vector<string> ok{"OK"};
+    vector<string> ok {"OK"};
     int kat_no = find_id(kategorie, stoi(data[4]));
     try
     {
@@ -314,7 +317,6 @@ void Kategoria::item_export(ostream& out)
     out << nazwa << endl;
     out << symbol << endl;
     out << id << endl;
-    out << endl;
 }
 
 void Klient::item_export(ostream &out)
@@ -331,8 +333,6 @@ void Klient::item_export(ostream &out)
         out << pozyczone[j]->id << endl;
         out << pozyczone[j]->pozyczona << endl;
     }
-
-    out << endl;
 }
 
 void Ksiazka::item_export(ostream &out)
@@ -342,7 +342,6 @@ void Ksiazka::item_export(ostream &out)
     out << id << endl;
     out << rok_wydania << endl;
     out << kat->id << endl;
-    out << endl;
 }
 
 int data_export(vector<Kategoria*> &kategorie, vector<Ksiazka*> &ksiazki, vector<Klient*> &klienci)
@@ -369,6 +368,8 @@ int data_export(vector<Kategoria*> &kategorie, vector<Ksiazka*> &ksiazki, vector
     for (vector<Kategoria*>::iterator i=kategorie.begin(); i!=kategorie.end(); i++, j++)
     {
         kategorie[j]->item_export(out1);
+        if(j!=kategorie.size()-1)
+            out1 << endl;
     }
     out1.close();
 
@@ -377,6 +378,8 @@ int data_export(vector<Kategoria*> &kategorie, vector<Ksiazka*> &ksiazki, vector
     for (vector<Ksiazka*>::iterator i=ksiazki.begin(); i!=ksiazki.end(); i++, j++)
     {
         ksiazki[j]->item_export(out2);
+        if(j!=ksiazki.size()-1)
+            out2 << endl;
     }
     out2.close();
 
@@ -385,6 +388,8 @@ int data_export(vector<Kategoria*> &kategorie, vector<Ksiazka*> &ksiazki, vector
     for (vector<Klient*>::iterator i=klienci.begin(); i!=klienci.end(); i++, j++)
     {
         klienci[j]->item_export(out3);
+        if(j!=klienci.size()-1)
+            out3 << endl;
     }
     out3.close();
 
@@ -470,10 +475,10 @@ bool Klient::check(int mode)
     if(mode==1)
         if(pozyczone.size()>0)
             return true;
-    else if(mode==2)
-        for(int i=0; i<pozyczone.size(); i++)
-            if(time(0)-pozyczone[i]->pozyczona > 3*DAY)
-                return true;
+        else if(mode==2)
+            for(int i=0; i<pozyczone.size(); i++)
+                if(time(0)-pozyczone[i]->pozyczona > 3*DAY)
+                    return true;
 
     return false;
 }
@@ -524,14 +529,14 @@ size_t Kategoria::find_text(string text)
     size_t pos = symbol.find(text);
     if(pos == string::npos)
         pos = nazwa.find(text);
-        if(pos == string::npos)
-        {
-            string numer;
-            char tmp[4];
-            sprintf(tmp, "%d", id);
-            numer = tmp;
-            pos = numer.find(text);
-        }
+    if(pos == string::npos)
+    {
+        string numer;
+        char tmp[4];
+        sprintf(tmp, "%d", id);
+        numer = tmp;
+        pos = numer.find(text);
+    }
 
     return pos;
 }
