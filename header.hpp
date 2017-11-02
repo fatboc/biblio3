@@ -1,7 +1,6 @@
 #include <ncurses.h>
 #include <menu.h>
 #include <form.h>
-#include <vector>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -34,7 +33,7 @@ struct Ksiazka
     bool dostepnosc;
     Klient * wypozyczajacy;
     Kategoria * kat;
-    time_t pozyczona;
+    long int pozyczona;
 
     void print();
     void print(WINDOW *);
@@ -93,8 +92,8 @@ int data_import(vector <Kategoria*> &kategorie, vector <Klient*> &klienci, vecto
 int add_book(vector<Ksiazka*> &ksiazki, vector<Kategoria*> &kategorie, vector<string> &data);
 int add_client(vector<Klient*> &klienci, vector<string> &data);
 int add_category(vector<Kategoria*> &kategorie, vector<string> &data);
-int menu_kategorie(WINDOW * window, vector <Kategoria*>& kategorie, vector<Ksiazka*> &ksiazki);
-int menu_klienci(WINDOW * window, vector <Klient*> &klienci);
+int menu_kategorie(WINDOW *, vector <Kategoria*>&, vector<Ksiazka*> &, vector<Klient*> &);
+int menu_klienci(WINDOW *, vector <Klient*> &, vector <Kategoria*>&, vector<Ksiazka*> &);
 int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*> &kategorie, vector <Klient*> klienci);
 int data_export(vector<Kategoria*> &kategorie, vector<Ksiazka*> &ksiazki, vector<Klient*> &klienci);
 void cleanup(WINDOW *window, vector<Kategoria*> &kategorie, vector<Klient*> &klienci, vector<Ksiazka*> &ksiazki);

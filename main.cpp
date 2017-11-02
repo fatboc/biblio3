@@ -19,7 +19,7 @@ int main()
         return -1;
     }
 
-    WINDOW * window = newwin(LINES-1, COLS, 0, 0);
+    WINDOW * window = newwin(LINES, COLS, 0, 0);
 
     menu_main(window, kategorie, ksiazki, klienci);
 

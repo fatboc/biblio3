@@ -18,13 +18,16 @@ int data_import(vector <Kategoria*> &kategorie, vector <Klient*> &klienci, vecto
         getline(in1, new_cat->nazwa);
         getline(in1, new_cat->symbol);
         getline(in1, tmp);
+
         (stringstream)tmp >> new_cat->id;
 
         in1.ignore(numeric_limits<streamsize>::max(), '\n');
 
-        if(new_cat->symbol!=""&&new_cat->nazwa!=""&&new_cat->id!=0)
-            kategorie.push_back(new_cat);
-        else delete new_cat;
+        if(new_cat->symbol==""||new_cat->nazwa==""||new_cat->id==0)
+            delete new_cat;
+        else if(find_id(kategorie, new_cat->id)!=-1)
+            delete new_cat;
+        else kategorie.push_back(new_cat);
     }
     in1.close();
 
@@ -55,9 +58,11 @@ int data_import(vector <Kategoria*> &kategorie, vector <Klient*> &klienci, vecto
 
         in2.ignore(numeric_limits<streamsize>::max(), '\n');
 
-        if(new_book->tytul!=""&&new_book->autor!=""&&new_book->id!=0&&new_book->kat!=NULL)
-            ksiazki.push_back(new_book);
-        else delete new_book;
+        if(new_book->tytul==""||new_book->autor==""||new_book->id==0||new_book->kat==NULL)
+            delete new_book;
+        else if(find_id(ksiazki, new_book->id)!=-1)
+            delete new_book;
+        else ksiazki.push_back(new_book);
     }
     in2.close();
 
@@ -93,10 +98,12 @@ int data_import(vector <Kategoria*> &kategorie, vector <Klient*> &klienci, vecto
 
         in3.ignore(numeric_limits<streamsize>::max(), '\n');
 
-        if(new_client->imie!=""&&new_client->nazwisko!=""&&new_client->id!=0)
-            klienci.push_back(new_client);
-        else
+        if(new_client->imie==""||new_client->nazwisko==""||new_client->id==0)
             delete new_client;
+        else if(find_id(klienci, new_client->id)!=-1)
+            delete new_client;
+        else
+            klienci.push_back(new_client);
     }
     in3.close();
 
@@ -168,9 +175,7 @@ void Klient::print(WINDOW * window)
         mvwprintw(window, 14, 2, "Brak wypozyczonych ksiazek.");
     else
     {
-        mvwprintw(window, 14, 2, "Wypozyczone ksiazki:");
-        for(int i=0; i<pozyczone.size(); i++)
-            mvwprintw(window, 16+2*i, 2, "%d - %s", pozyczone[i]->id, pozyczone[i]->tytul.c_str());
+        mvwprintw(window, 14, 2, "Liczba wypozyczonych ksiazek: %d.", pozyczone.size());
     }
 
     wrefresh(window);
@@ -202,9 +207,7 @@ void Kategoria::print(WINDOW * window)
         mvwprintw(window, 10, 2, "Brak ksiazek w kategorii.");
     else
     {
-        mvwprintw(window, 10, 2, "Do kategorii naleza:");
-        for (int i=0; i<nalezace.size(); i++)
-            mvwprintw(window, 12+2*i, 2, "%d - %s", nalezace[i]->id, nalezace[i]->tytul.c_str());
+        mvwprintw(window, 10, 2, "Liczba ksiazek w kategorii: %d.", nalezace.size());
     }
 
     wrefresh(window);
@@ -473,9 +476,11 @@ void cleanup(WINDOW *window, vector<Kategoria*> &kategorie, vector<Klient*> &kli
 bool Klient::check(int mode)
 {
     if(mode==1)
+    {
         if(pozyczone.size()>0)
             return true;
-        else if(mode==2)
+    }
+    else if(mode==2)
             for(int i=0; i<pozyczone.size(); i++)
                 if(time(0)-pozyczone[i]->pozyczona > 3*DAY)
                     return true;
@@ -485,12 +490,11 @@ bool Klient::check(int mode)
 
 bool Ksiazka::check(int mode)
 {
-    time_t tmp = 3*DAY;
     if(mode==1&&(dostepnosc))
         return true;
     else if(mode==2&&(!dostepnosc))
         return true;
-    else if(mode==3&&((time(0)-pozyczona) < tmp))
+    else if(mode==3&&(!dostepnosc)&&(time(0)-pozyczona) > 3*DAY)
         return true;
 
     return false;

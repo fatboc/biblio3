@@ -121,7 +121,7 @@ int create_menu(WINDOW * window, vector<string> &list_choices, string header, st
         {
         case KEY_UP:
             if(!upper_active)
-                menu_driver(current_menu, REQ_PREV_ITEM);
+                menu_driver(current_menu, REQ_UP_ITEM);
             break;
         case KEY_LEFT:
             if(upper_active)
@@ -129,12 +129,20 @@ int create_menu(WINDOW * window, vector<string> &list_choices, string header, st
             break;
         case KEY_DOWN:
             if(!upper_active)
-                menu_driver(current_menu, REQ_NEXT_ITEM);
+                menu_driver(current_menu, REQ_DOWN_ITEM);
             break;
         case KEY_RIGHT:
             if(upper_active)
                 menu_driver(current_menu, REQ_NEXT_ITEM);
             break;
+        case KEY_NPAGE:
+            if(!upper_active)
+				menu_driver(current_menu, REQ_SCR_DPAGE);
+				break;
+        case KEY_PPAGE:
+            if(!upper_active)
+				menu_driver(current_menu, REQ_SCR_UPAGE);
+				break;
         case '\t':
         {
             if(upper_present)
@@ -200,6 +208,7 @@ int dialog(vector<string> &choices, string header, string text)
     items[n] = (ITEM *)NULL;
 
     menu = new_menu(items);
+
     int height = 7+n, width = 25+len, starty = (LINES-height)/2, startx = (COLS-width)/2;
 
     init_pair(1, COLOR_WHITE, COLOR_RED);
@@ -253,7 +262,7 @@ int dialog(vector<string> &choices, string header, string text)
 
 int find_longest(vector<string> &data)
 {
-    unsigned int len=0, j=0;
+    int len=0, j=0;
 
     for (vector<string>::iterator i=data.begin(); i!=data.end(); i++, j++)
         if (data[j].length()>len)
@@ -293,11 +302,11 @@ int menu_main(WINDOW* window, vector<Kategoria*> &kategorie, vector<Ksiazka*>& k
             break;
 
         case 2:
-            menu_klienci(window, klienci);
+            menu_klienci(window, klienci, kategorie, ksiazki);
             break;
 
         case 3:
-            menu_kategorie(window, kategorie, ksiazki);
+            menu_kategorie(window, kategorie, ksiazki, klienci);
             break;
 
         case 4:
@@ -319,14 +328,14 @@ int menu_main(WINDOW* window, vector<Kategoria*> &kategorie, vector<Ksiazka*>& k
     return 0;
 }
 
-int menu_kategorie(WINDOW * window, vector <Kategoria*>& kategorie, vector<Ksiazka*> &ksiazki)
+int menu_kategorie(WINDOW * window, vector <Kategoria*>& kategorie, vector<Ksiazka*> &ksiazki, vector<Klient*> &klienci)
 {
     vector<string> list_choices;
 
     for (int i=0; i<kategorie.size(); i++)
         list_choices.push_back(kategorie[i]->new_choice());
 
-    vector<string> menu_choices {"Edytuj", "Usun", "Wroc"}, ok {"OK"};
+    vector<string> menu_choices {"Wyswietl ksiazki", "Edytuj", "Usun", "Wroc"}, ok {"OK"};
 
     int res=0, skip=0, x=0;
 
@@ -343,6 +352,13 @@ int menu_kategorie(WINDOW * window, vector <Kategoria*>& kategorie, vector<Ksiaz
             switch(x)
             {
             case -1:
+                if(kategorie[res-1]->nalezace.size()==0)
+                    dialog(ok, "KATEGORIA", "Brak ksiazek.");
+                else
+                    menu_ksiazki(window, kategorie[res-1]->nalezace, kategorie, klienci);
+                skip++;
+                break;
+            case -2:
             {
                 vector<string> result, data, fields {"Symbol:", "Nazwa:", "ID:"};
                 string tmp, ex1 = "Operacja przerwana.";
@@ -371,10 +387,24 @@ int menu_kategorie(WINDOW * window, vector <Kategoria*>& kategorie, vector<Ksiaz
                 int j=0;
                 list_choices[res-1] = kategorie[res-1]->new_choice();
                 dialog(ok, "EDYTUJ", "Zapisano pomyslnie.");
+                skip++;
                 break;
             }
-            case -2:
+            case -3:
             {
+                vector<string> opcje {"TAK", "NIE"};
+
+                try
+                {
+                    if(dialog(opcje, "USUN", "Czy chcesz usunac pozycje?")==1) throw "Operacja przerwana";
+                    if(dialog(opcje, "USUN", "Czy napewno?")==1) throw "Operacja przerwana";
+                }
+                catch (const char * ex)
+                {
+                    dialog(ok, "USUN", ex);
+                    break;
+                }
+
                 int j=0;
 
                 vector<string>::iterator i;
@@ -422,6 +452,7 @@ int menu_kategorie(WINDOW * window, vector <Kategoria*>& kategorie, vector<Ksiaz
                     for (int i=0; i<result.size(); i++)
                         result_choices.push_back(result[i]->new_choice());
                     res = create_menu(window, result_choices, "WYNIKI", "ID   Symbol  Nazwa", true);
+                    res = find_id(kategorie, result[res-1]->id) + 1;
                     skip++;
                 }
                 else
@@ -486,7 +517,7 @@ int menu_kategorie(WINDOW * window, vector <Kategoria*>& kategorie, vector<Ksiaz
     return res;
 }
 
-int menu_klienci(WINDOW * window, vector <Klient*> &klienci)
+int menu_klienci(WINDOW * window, vector <Klient*> &klienci, vector<Kategoria*> &kategorie, vector<Ksiazka*> &ksiazki)
 {
 
     vector<string> list_choices;
@@ -500,12 +531,24 @@ int menu_klienci(WINDOW * window, vector <Klient*> &klienci)
     do
     {
         if(skip==0)
-            res = create_menu(window, list_choices, "Klienci", "ID   Imie                 Nazwisko", true);
+            res = create_menu(window, list_choices, "KLIENCI", "ID   Imie                 Nazwisko", true);
         else
             skip = 0;
 
         if(res>0)
         {
+            if(klienci[res-1]->pozyczone.size()==0&&menu_choices.size()>3)
+            {
+                menu_choices.pop_back();
+                menu_choices.pop_back();
+                menu_choices.push_back("Wroc");
+            }
+            else if(klienci[res-1]->pozyczone.size()!=0&&menu_choices.size()<4)
+            {
+                menu_choices.pop_back();
+                menu_choices.push_back("Wypozyczone");
+                menu_choices.push_back("Wroc");
+            }
             x = item_details(window, klienci[res-1], "KLIENCI", menu_choices);
             switch(x)
             {
@@ -544,6 +587,18 @@ int menu_klienci(WINDOW * window, vector <Klient*> &klienci)
             }
             case -2:
             {
+                vector<string> opcje {"TAK", "NIE"};
+
+                try
+                {
+                    if(klienci[res-1]->pozyczone.size()!=0) throw "Najpierw zwroc ksiazki!";
+                    if(dialog(opcje, "USUN", "Czy chcesz usunac pozycje?")==1) throw "Operacja przerwana";
+                }
+                catch(const char * ex)
+                {
+                    dialog(ok, "USUN", ex);
+                    break;
+                }
                 int j=0;
 
                 vector<string>::iterator i;
@@ -557,6 +612,10 @@ int menu_klienci(WINDOW * window, vector <Klient*> &klienci)
                 dialog(ok, "USUN", "Pozycja usunieta.");
                 break;
             }
+            case -3:
+                if(klienci[res-1]->pozyczone.size()!=0)
+                    menu_ksiazki(window, klienci[res-1]->pozyczone, kategorie, klienci);
+                break;
             default:
                 break;
             }
@@ -578,6 +637,7 @@ int menu_klienci(WINDOW * window, vector <Klient*> &klienci)
                     for (int i=0; i<result.size(); i++)
                         result_choices.push_back(result[i]->new_choice());
                     res = create_menu(window, result_choices, "WYNIKI", "ID   Imie                 Nazwisko", true);
+                    res = find_id(klienci, result[res-1]->id) + 1;
                     skip++;
                 }
                 else
@@ -616,7 +676,8 @@ int menu_klienci(WINDOW * window, vector <Klient*> &klienci)
                         result.push_back(klienci[j]);
                 for (int i=0; i<result.size(); i++)
                     result_choices.push_back(result[i]->new_choice());
-                res = create_menu(window, result_choices, "WYNIKI", "ID   Imie                 Nazwisko", true);\
+                res = create_menu(window, result_choices, "WYNIKI", "ID   Imie                 Nazwisko", true);
+                res = find_id(klienci, result[res-1]->id) + 1;
                 skip++;
                 break;
             }
@@ -717,9 +778,12 @@ int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*
             {
                 int j=0, n;
 
+                vector<string> opcje {"TAK", "NIE"};
+
                 try
                 {
                     if(!ksiazki[res-1]->dostepnosc) throw "Ksiazka jest wypozyczona.";
+                    if(dialog(opcje, "USUN", "Czy chcesz usunac pozycje?")==1) throw "Operacja przerwana";
                     if((n = find_id(ksiazki[res-1]->kat->nalezace, ksiazki[res-1]->id))<0) throw "Cos nie pyklo.";
                 }
                 catch (const char * ex)
@@ -792,6 +856,7 @@ int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*
                     for (int i=0; i<result.size(); i++)
                         result_choices.push_back(result[i]->new_choice());
                     res = create_menu(window, result_choices, "WYNIKI", "ID   Autor                Tytul", true);
+                    res = find_id(ksiazki, result[res-1]->id) + 1;
                     skip++;
                 }
                 else
@@ -831,6 +896,7 @@ int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*
                 for (int i=0; i<result.size(); i++)
                     result_choices.push_back(result[i]->new_choice());
                 res = create_menu(window, result_choices, "WYNIKI", "ID   Autor                Tytul", true);
+                res = find_id(ksiazki, result[res-1]->id) + 1;
                 skip++;
                 break;
             }
@@ -907,13 +973,14 @@ string search_form(string text)
     FIELD *field[2];
     FORM * form;
 
-    char * choices[] = {"Szukaj", "Wroc"};
+    vector<string> choices {"Szukaj", "Wroc"};
+    int n = choices.size();
 
     items = (ITEM **)calloc(2, sizeof(ITEM *));
 
-    for (int i=0; i<2; i++)
-        items[i]=new_item(choices[i], "");
-    items[2] = (ITEM *)NULL;
+    for (int i=0; i<n; i++)
+        items[i]=new_item(choices[i].c_str(), "");
+    items[n] = (ITEM *)NULL;
 
     menu = new_menu(items);
     int height = 10, width = 50, starty = (LINES-height)/2, startx = (COLS-width)/2;
@@ -951,7 +1018,6 @@ string search_form(string text)
     field[1] = NULL;
     field_opts_off(field[0], O_AUTOSKIP);
 
-    /* Create the form and post it */
     form = new_form(field);
     form_window = subwin(pop_up, 1, 40, starty+5, startx+5);
     wbkgd(form_window, COLOR_PAIR(2));
@@ -1015,14 +1081,6 @@ string search_form(string text)
             if (!lower_active)
                  form_driver(form, REQ_NEXT_FIELD);
             x = item_index(current_item(menu))+1;
-            /*else
-            {
-                form_driver(form, REQ_NEXT_FIELD);
-                lower_active = true;
-                if (lower_active)
-                    set_menu_fore(menu, A_REVERSE | COLOR_PAIR(1));
-                wrefresh(menu_window);
-            }*/
             break;
         }
         case KEY_BACKSPACE:
@@ -1050,8 +1108,9 @@ string search_form(string text)
         strcpy(tmp, result.c_str());
         result = trim(tmp);
     }
-    free_field(field[0]);
-    free_field(field[1]);
+
+    for (int i=0; i<n; i++)
+        free_field(field[i]);
     free_form(form);
     free_menu(menu);
     delwin(pop_up);
