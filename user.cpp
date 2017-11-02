@@ -660,7 +660,7 @@ int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*
     for (int i=0; i<ksiazki.size(); i++)
         list_choices.push_back(ksiazki[i]->new_choice());
 
-    vector<string> menu_choices {"Edytuj", "Usun", "Wroc"}, ok{"OK"};
+    vector<string> menu_choices {"Edytuj", "Usun", "Wypozycz", "Wroc"}, ok{"OK"};
 
     int res=0, skip=0, x=0;
 
@@ -673,6 +673,11 @@ int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*
 
         if(res>0)
         {
+            if(ksiazki[res-1]->dostepnosc)
+                menu_choices[2]="Wypozycz";
+            else
+                menu_choices[2] = "Zwroc";
+
             x = item_details(window, ksiazki[res-1], "KSIAZKI", menu_choices);
             switch(x)
             {
@@ -738,6 +743,31 @@ int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*
                 delete_item(ksiazki, res-1);
 
                 dialog(ok, "USUN", "Pozycja usunieta.");
+                break;
+            }
+            case -3:
+            {
+                if(!ksiazki[res-1]->dostepnosc)
+                {
+                    int j=0, pos = find_id(ksiazki[res-1]->wypozyczajacy->pozyczone, ksiazki[res-1]->id);
+                    vector<Ksiazka*>::iterator i;
+                    for(i=ksiazki[res-1]->wypozyczajacy->pozyczone.begin(); i!=ksiazki[res-1]->wypozyczajacy->pozyczone.end(); i++, j++)
+                        if(j==pos) break;
+                    ksiazki[res-1]->wypozyczajacy->pozyczone.erase(i);
+                    ksiazki[res-1]->wypozyczajacy = NULL;
+                    ksiazki[res-1]->pozyczona = 0;
+                    dialog(ok, "ZWROC", "Zwrocono ksiazke.");
+                }
+                else
+                {
+                    string klient = search_form("Podaj id klienta:");
+                    int pos = find_id(ksiazki, atoi(klient.c_str()));
+                    klienci[pos]->pozyczone.push_back(ksiazki[res-1]);
+                    ksiazki[res-1]->wypozyczajacy = klienci[pos];
+                    ksiazki[res-1]->pozyczona = time(0);
+                    dialog(ok, "WYPOZYCZ", "Ksiazka wypozyczona.");
+                }
+                ksiazki[res-1]->dostepnosc = !ksiazki[res-1]->dostepnosc;
                 break;
             }
             default:
