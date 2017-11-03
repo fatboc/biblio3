@@ -481,9 +481,9 @@ bool Klient::check(int mode)
             return true;
     }
     else if(mode==2)
-            for(int i=0; i<pozyczone.size(); i++)
-                if(time(0)-pozyczone[i]->pozyczona > 3*DAY)
-                    return true;
+        for(int i=0; i<pozyczone.size(); i++)
+            if(time(0)-pozyczone[i]->pozyczona > 3*DAY)
+                return true;
 
     return false;
 }

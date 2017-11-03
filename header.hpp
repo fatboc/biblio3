@@ -22,8 +22,6 @@ typedef struct Ksiazka Ksiazka;
 typedef struct Klient Klient;
 typedef struct Kategoria Kategoria;
 
-
-
 struct Ksiazka
 {
     string tytul;
@@ -83,20 +81,22 @@ int create_menu(WINDOW *, vector<string> &, string, string, bool);
 int dialog(vector<string> &, string, string);
 int find_longest(vector<string> &);
 int init();
-int menu_main(WINDOW* window, vector<Kategoria*> &kategorie, vector<Ksiazka*>& ksiazki, vector<Klient*> &klienci);
-void zapisz(vector<Kategoria*> &kategorie, vector<Ksiazka*> &ksiazki, vector<Klient*> &klienci);
+int menu_main(WINDOW* window, vector<Kategoria*> &, vector<Ksiazka*>&, vector<Klient*> &);
+int menu_kategorie(WINDOW *, vector <Kategoria*>&, vector<Ksiazka*> &, vector<Klient*> &);
+int menu_klienci(WINDOW *, vector <Klient*> &, vector <Kategoria*>&);
+int menu_ksiazki(WINDOW *, vector <Ksiazka*> &, vector <Kategoria*> &, vector <Klient*>&);
+void zapisz(vector<Kategoria*> &, vector<Ksiazka*> &, vector<Klient*> &);
+string search_form(string);
+int item_form(WINDOW *, string, vector<string> &, vector<string> &, vector<string> &);
+void elo();
 
 //data.cpp
 
-int data_import(vector <Kategoria*> &kategorie, vector <Klient*> &klienci, vector <Ksiazka*> &ksiazki);
-int add_book(vector<Ksiazka*> &ksiazki, vector<Kategoria*> &kategorie, vector<string> &data);
-int add_client(vector<Klient*> &klienci, vector<string> &data);
-int add_category(vector<Kategoria*> &kategorie, vector<string> &data);
-int menu_kategorie(WINDOW *, vector <Kategoria*>&, vector<Ksiazka*> &, vector<Klient*> &);
-int menu_klienci(WINDOW *, vector <Klient*> &, vector <Kategoria*>&, vector<Ksiazka*> &);
-int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*> &kategorie, vector <Klient*> klienci);
-int data_export(vector<Kategoria*> &kategorie, vector<Ksiazka*> &ksiazki, vector<Klient*> &klienci);
-void cleanup(WINDOW *window, vector<Kategoria*> &kategorie, vector<Klient*> &klienci, vector<Ksiazka*> &ksiazki);
-string search_form(string);
+int data_import(vector <Kategoria*> &, vector <Klient*> &, vector <Ksiazka*> &);
+int add_book(vector<Ksiazka*> &, vector<Kategoria*> &, vector<string> &);
+int add_client(vector<Klient*> &, vector<string> &);
+int add_category(vector<Kategoria*> &, vector<string> &);
+int data_export(vector<Kategoria*> &, vector<Ksiazka*> &, vector<Klient*> &);
+void cleanup(WINDOW *, vector<Kategoria*> &, vector<Klient*> &, vector<Ksiazka*> &);
 char * trim(char *);
-int item_form(WINDOW * window, string header, vector<string> &fields, vector<string> &data, vector<string> &result);
+

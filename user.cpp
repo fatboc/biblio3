@@ -2,7 +2,7 @@
 
 void elo()
 {
-    vector<string> ok{"OK"};
+    vector<string> ok {"OK"};
     dialog(ok, "ELO", "elo.");
 }
 
@@ -72,6 +72,12 @@ int create_menu(WINDOW * window, vector<string> &list_choices, string header, st
     if(upper_present)
     {
         vector<string> menu_choices {"Szukaj", "Sortuj", "Filtruj", "Nowy", "Wroc"};
+
+        if(header=="WYNIKI")
+        {
+            menu_choices.clear();
+            menu_choices.push_back("Wroc");
+        }
         j = menu_choices.size();
 
         menu_items = (ITEM**)calloc(j+1, sizeof(ITEM*));
@@ -104,7 +110,7 @@ int create_menu(WINDOW * window, vector<string> &list_choices, string header, st
     current_window = list_window;
 
 //sterowanie
-    while((c = wgetch(window))!=KEY_F(1))
+    while((c = wgetch(window)))
     {
         if(upper_active)
         {
@@ -137,12 +143,12 @@ int create_menu(WINDOW * window, vector<string> &list_choices, string header, st
             break;
         case KEY_NPAGE:
             if(!upper_active)
-				menu_driver(current_menu, REQ_SCR_DPAGE);
-				break;
+                menu_driver(current_menu, REQ_SCR_DPAGE);
+            break;
         case KEY_PPAGE:
             if(!upper_active)
-				menu_driver(current_menu, REQ_SCR_UPAGE);
-				break;
+                menu_driver(current_menu, REQ_SCR_UPAGE);
+            break;
         case '\t':
         {
             if(upper_present)
@@ -302,7 +308,7 @@ int menu_main(WINDOW* window, vector<Kategoria*> &kategorie, vector<Ksiazka*>& k
             break;
 
         case 2:
-            menu_klienci(window, klienci, kategorie, ksiazki);
+            menu_klienci(window, klienci, kategorie);
             break;
 
         case 3:
@@ -323,7 +329,8 @@ int menu_main(WINDOW* window, vector<Kategoria*> &kategorie, vector<Ksiazka*>& k
             menu_main(window, kategorie, ksiazki, klienci);
             break;
         }
-    }while (res!=-1&&res!=5);
+    }
+    while (res!=-1&&res!=5);
 
     return 0;
 }
@@ -366,25 +373,24 @@ int menu_kategorie(WINDOW * window, vector <Kategoria*>& kategorie, vector<Ksiaz
                 data.push_back(kategorie[res-1]->nazwa);
                 data.push_back(to_string(kategorie[res-1]->id));
 
-                    try
-                    {
-                        int nr;
-                        if(item_form(window, "EDYTUJ", fields, data, result)!=1) throw ex1;
-                        (stringstream)result[2]>>nr;
-                        if(find_id(kategorie,nr)!=-1&&find_id(kategorie, nr)!=res-1) throw "ID juz istnieje.";
-                        kategorie[res-1]->modify(result);
-                    }
-                    catch(string ex)
-                    {
-                        dialog(ok, "EDYTUJ", ex);
-                        break;
-                    }
-                    catch(...)
-                    {
-                        dialog(ok, "EDYTUJ", "Cos poszlo nie tak.");
-                        break;
-                    }
-                int j=0;
+                try
+                {
+                    int nr;
+                    if(item_form(window, "EDYTUJ", fields, data, result)!=1) throw ex1;
+                    (stringstream)result[2]>>nr;
+                    if(find_id(kategorie,nr)!=-1&&find_id(kategorie, nr)!=res-1) throw "ID juz istnieje.";
+                    kategorie[res-1]->modify(result);
+                }
+                catch(string ex)
+                {
+                    dialog(ok, "EDYTUJ", ex);
+                    break;
+                }
+                catch(...)
+                {
+                    dialog(ok, "EDYTUJ", "Cos poszlo nie tak.");
+                    break;
+                }
                 list_choices[res-1] = kategorie[res-1]->new_choice();
                 dialog(ok, "EDYTUJ", "Zapisano pomyslnie.");
                 skip++;
@@ -443,7 +449,7 @@ int menu_kategorie(WINDOW * window, vector <Kategoria*>& kategorie, vector<Ksiaz
                 string text = search_form("Wprowadz wyszukiwana fraze:");
                 if (text.size()!=0)
                 {
-                    int j=0, x=-1;
+                    int j=0;
                     vector<Kategoria*> result;
                     vector<string> result_choices;
                     for (vector<Kategoria*>::iterator i=kategorie.begin(); i!=kategorie.end(); i++, j++)
@@ -452,8 +458,12 @@ int menu_kategorie(WINDOW * window, vector <Kategoria*>& kategorie, vector<Ksiaz
                     for (int i=0; i<result.size(); i++)
                         result_choices.push_back(result[i]->new_choice());
                     res = create_menu(window, result_choices, "WYNIKI", "ID   Symbol  Nazwa", true);
-                    res = find_id(kategorie, result[res-1]->id) + 1;
-                    skip++;
+                    int tmp;
+                    if(res>0&&(tmp = find_id(kategorie, result[res-1]->id))>-1)
+                    {
+                        res = tmp+1;
+                        skip++;
+                    }
                 }
                 else
                     dialog(ok, "SZUKAJ", "Brak wynikow.");
@@ -488,22 +498,24 @@ int menu_kategorie(WINDOW * window, vector <Kategoria*>& kategorie, vector<Ksiaz
                 vector<string> result, data, fields {"Symbol:", "Nazwa:", "ID:"};
                 for(int i=0; i<3; i++)
                     data.push_back("Podaj wartosc");
-                    string ex1 = "Operacja przerwana.";
-                    try
-                    {
-                        if(item_form(window, "NOWA KATEGORIA", fields, data, result)!=1) throw ex1;
-                        add_category(kategorie, result);
-                    }
-                    catch(string ex)
-                    {
-                        dialog(ok, "NOWY", ex);
-                        break;
-                    }
-                    catch(...)
-                    {
-                        dialog(ok, "NOWY", "Cos poszlo nie tak.");
-                        break;
-                    }
+                data[2] = to_string(ksiazki.size()+1);
+
+                string ex1 = "Operacja przerwana.";
+                try
+                {
+                    if(item_form(window, "NOWA KATEGORIA", fields, data, result)!=1) throw ex1;
+                    add_category(kategorie, result);
+                }
+                catch(string ex)
+                {
+                    dialog(ok, "NOWY", ex);
+                    break;
+                }
+                catch(...)
+                {
+                    dialog(ok, "NOWY", "Cos poszlo nie tak.");
+                    break;
+                }
                 list_choices.push_back(kategorie.back()->new_choice());
                 dialog(ok, "NOWY", "Zapisano pomyslnie.");
                 break;
@@ -511,20 +523,21 @@ int menu_kategorie(WINDOW * window, vector <Kategoria*>& kategorie, vector<Ksiaz
             default:
                 break;
             }
-    } while (res!=-5);
+    }
+    while (res!=-5);
 
 
     return res;
 }
 
-int menu_klienci(WINDOW * window, vector <Klient*> &klienci, vector<Kategoria*> &kategorie, vector<Ksiazka*> &ksiazki)
+int menu_klienci(WINDOW * window, vector <Klient*> &klienci, vector<Kategoria*> &kategorie)
 {
 
     vector<string> list_choices;
     for (int i=0; i<klienci.size(); i++)
         list_choices.push_back(klienci[i]->new_choice());
 
-    vector<string> menu_choices {"Edytuj", "Usun", "Wroc"}, ok{"OK"};
+    vector<string> menu_choices {"Edytuj", "Usun", "Wroc"}, ok {"OK"};
 
     int res, skip=0, x=0;
 
@@ -562,25 +575,24 @@ int menu_klienci(WINDOW * window, vector <Klient*> &klienci, vector<Kategoria*> 
                 data.push_back(klienci[res-1]->adres);
                 data.push_back(klienci[res-1]->telefon);
 
-                    try
-                    {
-                        int nr;
-                        if(item_form(window, "EDYTUJ", fields, data, result)!=1) throw ex1;
-                        (stringstream)result[2]>>nr;
-                        if(find_id(klienci,nr)!=-1&&find_id(klienci, nr)!=res-1) throw "ID juz istnieje.";
-                        klienci[res-1]->modify(result);
-                    }
-                    catch(string ex)
-                    {
-                        dialog(ok, "EDYTUJ", ex);
-                        break;
-                    }
-                    catch(...)
-                    {
-                        dialog(ok, "EDYTUJ", "Cos poszlo nie tak.");
-                        break;
-                    }
-                int j=0;
+                try
+                {
+                    int nr;
+                    if(item_form(window, "EDYTUJ", fields, data, result)!=1) throw ex1;
+                    (stringstream)result[2]>>nr;
+                    if(find_id(klienci,nr)!=-1&&find_id(klienci, nr)!=res-1) throw "ID juz istnieje.";
+                    klienci[res-1]->modify(result);
+                }
+                catch(string ex)
+                {
+                    dialog(ok, "EDYTUJ", ex);
+                    break;
+                }
+                catch(...)
+                {
+                    dialog(ok, "EDYTUJ", "Cos poszlo nie tak.");
+                    break;
+                }
                 list_choices[res-1] = klienci[res-1]->new_choice();
                 dialog(ok, "EDYTUJ", "Zapisano pomyslnie.");
                 break;
@@ -628,7 +640,7 @@ int menu_klienci(WINDOW * window, vector <Klient*> &klienci, vector<Kategoria*> 
                 string text = search_form("Wprowadz wyszukiwana fraze:");
                 if (text.size()!=0)
                 {
-                    int j=0, x=-1;
+                    int j=0;
                     vector<Klient*> result;
                     vector<string> result_choices;
                     for (vector<Klient*>::iterator i=klienci.begin(); i!=klienci.end(); i++, j++)
@@ -637,8 +649,12 @@ int menu_klienci(WINDOW * window, vector <Klient*> &klienci, vector<Kategoria*> 
                     for (int i=0; i<result.size(); i++)
                         result_choices.push_back(result[i]->new_choice());
                     res = create_menu(window, result_choices, "WYNIKI", "ID   Imie                 Nazwisko", true);
-                    res = find_id(klienci, result[res-1]->id) + 1;
-                    skip++;
+                    int tmp;
+                    if(res>0&&(tmp = find_id(klienci, result[res-1]->id))>-1)
+                    {
+                        res = tmp+1;
+                        skip++;
+                    }
                 }
                 else
                     dialog(ok, "SZUKAJ", "Brak wynikow.");
@@ -677,8 +693,12 @@ int menu_klienci(WINDOW * window, vector <Klient*> &klienci, vector<Kategoria*> 
                 for (int i=0; i<result.size(); i++)
                     result_choices.push_back(result[i]->new_choice());
                 res = create_menu(window, result_choices, "WYNIKI", "ID   Imie                 Nazwisko", true);
-                res = find_id(klienci, result[res-1]->id) + 1;
-                skip++;
+                int tmp;
+                if(res>0&&(tmp = find_id(klienci, result[res-1]->id))>-1)
+                {
+                    res = tmp+1;
+                    skip++;
+                }
                 break;
             }
             case -4:
@@ -686,22 +706,23 @@ int menu_klienci(WINDOW * window, vector <Klient*> &klienci, vector<Kategoria*> 
                 vector<string> result, data, fields {"Imie:", "Nazwisko:", "ID:", "Adres:", "Telefon:"};
                 for(int i=0; i<5; i++)
                     data.push_back("Podaj wartosc");
-                    string ex1 = "Operacja przerwana.";
-                    try
-                    {
-                        if(item_form(window, "NOWY KLIENT", fields, data, result)!=1) throw ex1;
-                        add_client(klienci, result);
-                    }
-                    catch(string ex)
-                    {
-                        dialog(ok, "NOWY", ex);
-                        break;
-                    }
-                    catch(...)
-                    {
-                        dialog(ok, "NOWY", "Cos poszlo nie tak.");
-                        break;
-                    }
+                data[2] = to_string(klienci.size()+1);
+                string ex1 = "Operacja przerwana.";
+                try
+                {
+                    if(item_form(window, "NOWY KLIENT", fields, data, result)!=1) throw ex1;
+                    add_client(klienci, result);
+                }
+                catch(string ex)
+                {
+                    dialog(ok, "NOWY", ex);
+                    break;
+                }
+                catch(...)
+                {
+                    dialog(ok, "NOWY", "Cos poszlo nie tak.");
+                    break;
+                }
                 list_choices.push_back(klienci.back()->new_choice());
                 dialog(ok, "NOWY", "Zapisano pomyslnie.");
                 break;
@@ -709,19 +730,20 @@ int menu_klienci(WINDOW * window, vector <Klient*> &klienci, vector<Kategoria*> 
             default:
                 break;
             }
-    } while (res!=-5);
+    }
+    while (res!=-5);
 
     return 0;
 }
 
-int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*> &kategorie, vector <Klient*> klienci)
+int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*> &kategorie, vector <Klient*> &klienci)
 {
     vector<string> list_choices;
 
     for (int i=0; i<ksiazki.size(); i++)
         list_choices.push_back(ksiazki[i]->new_choice());
 
-    vector<string> menu_choices {"Edytuj", "Usun", "Wypozycz", "Wroc"}, ok{"OK"};
+    vector<string> menu_choices {"Edytuj", "Usun", "Wypozycz", "Wroc"}, ok {"OK"};
 
     int res=0, skip=0, x=0;
 
@@ -751,25 +773,24 @@ int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*
                 data.push_back(to_string(ksiazki[res-1]->id));
                 data.push_back(ksiazki[res-1]->rok_wydania);
 
-                    try
-                    {
-                        int nr;
-                        if(item_form(window, "EDYTUJ", fields, data, result)!=1) throw ex1;
-                        (stringstream)result[2]>>nr;
-                        if(find_id(ksiazki,nr)!=-1&&find_id(ksiazki, nr)!=res-1) throw "ID juz istnieje.";
-                        ksiazki[res-1]->modify(result);
-                    }
-                    catch(string ex)
-                    {
-                        dialog(ok, "EDYTUJ", ex);
-                        break;
-                    }
-                    catch(...)
-                    {
-                        dialog(ok, "EDYTUJ", "Cos poszlo nie tak.");
-                        break;
-                    }
-                int j=0;
+                try
+                {
+                    int nr;
+                    if(item_form(window, "EDYTUJ", fields, data, result)!=1) throw ex1;
+                    (stringstream)result[2]>>nr;
+                    if(find_id(ksiazki,nr)!=-1&&find_id(ksiazki, nr)!=res-1) throw "ID juz istnieje.";
+                    ksiazki[res-1]->modify(result);
+                }
+                catch(string ex)
+                {
+                    dialog(ok, "EDYTUJ", ex);
+                    break;
+                }
+                catch(...)
+                {
+                    dialog(ok, "EDYTUJ", "Cos poszlo nie tak.");
+                    break;
+                }
                 list_choices[res-1] = ksiazki[res-1]->new_choice();
                 dialog(ok, "EDYTUJ", "Zapisano pomyslnie.");
                 break;
@@ -847,17 +868,27 @@ int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*
                 string text = search_form("Wprowadz wyszukiwana fraze:");
                 if (text.size()!=0)
                 {
-                    int j=0, x=-1;
+                    int j=0;
                     vector<Ksiazka*> result;
                     vector<string> result_choices;
                     for (vector<Ksiazka*>::iterator i=ksiazki.begin(); i!=ksiazki.end(); i++, j++)
                         if(ksiazki[j]->find_text(text)!=string::npos)
                             result.push_back(ksiazki[j]);
+                    if(result.size()==0)
+                    {
+                        dialog(ok, "SZUKAJ", "Brak wynikow");
+                        break;
+                    }
                     for (int i=0; i<result.size(); i++)
                         result_choices.push_back(result[i]->new_choice());
                     res = create_menu(window, result_choices, "WYNIKI", "ID   Autor                Tytul", true);
-                    res = find_id(ksiazki, result[res-1]->id) + 1;
-                    skip++;
+
+                    int tmp;
+                    if(res>0&&(tmp = find_id(klienci, result[res-1]->id))>-1)
+                    {
+                        res = tmp+1;
+                        skip++;
+                    }
                 }
                 else
                     dialog(ok, "SZUKAJ", "Brak wynikow.");
@@ -896,8 +927,14 @@ int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*
                 for (int i=0; i<result.size(); i++)
                     result_choices.push_back(result[i]->new_choice());
                 res = create_menu(window, result_choices, "WYNIKI", "ID   Autor                Tytul", true);
-                res = find_id(ksiazki, result[res-1]->id) + 1;
-                skip++;
+
+                int tmp;
+                if(res>0&&(tmp = find_id(klienci, result[res-1]->id))>-1)
+                {
+                    res = tmp+1;
+                    skip++;
+                }
+
                 break;
             }
             case -4:
@@ -905,26 +942,27 @@ int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*
                 vector<string> result, data, fields {"Autor:", "Tytul:", "ID:", "Rok wydania:"};
                 for(int i=0; i<4; i++)
                     data.push_back("Podaj wartosc");
-                    string ex1 = "Operacja przerwana.", kat;
-                    try
-                    {
-                        if(item_form(window, "NOWA KSIAZKA", fields, data, result)!=1) throw ex1;
-                        kat = search_form("Podaj numer kategorii:");
-                        if(kat=="") throw ex1;
-                        result.push_back(kat);
-                        if(add_book(ksiazki, kategorie, result)!=0) throw 0;
+                data[2] = to_string(ksiazki.size()+1);
+                string ex1 = "Operacja przerwana.", kat;
+                try
+                {
+                    if(item_form(window, "NOWA KSIAZKA", fields, data, result)!=1) throw ex1;
+                    kat = search_form("Podaj numer kategorii:");
+                    if(kat=="") throw ex1;
+                    result.push_back(kat);
+                    if(add_book(ksiazki, kategorie, result)!=0) throw 0;
 
-                    }
-                    catch(string ex)
-                    {
-                        dialog(ok, "NOWY", ex);
-                        break;
-                    }
-                    catch(...)
-                    {
-                        dialog(ok, "NOWY", "Cos poszlo nie tak.");
-                        break;
-                    }
+                }
+                catch(string ex)
+                {
+                    dialog(ok, "NOWY", ex);
+                    break;
+                }
+                catch(...)
+                {
+                    dialog(ok, "NOWY", "Cos poszlo nie tak.");
+                    break;
+                }
                 list_choices.push_back(ksiazki.back()->new_choice());
                 dialog(ok, "NOWY", "Zapisano pomyslnie.");
                 break;
@@ -932,7 +970,8 @@ int menu_ksiazki(WINDOW * window, vector <Ksiazka*> &ksiazki, vector <Kategoria*
             default:
                 break;
             }
-    } while (res!=-5);
+    }
+    while (res!=-5);
 
     return 0;
 }
@@ -1079,7 +1118,7 @@ string search_form(string text)
         case 10:
         {
             if (!lower_active)
-                 form_driver(form, REQ_NEXT_FIELD);
+                form_driver(form, REQ_NEXT_FIELD);
             x = item_index(current_item(menu))+1;
             break;
         }
@@ -1125,7 +1164,7 @@ int item_form(WINDOW * window, string header, vector<string> &fields, vector<str
     MENU * menu;
     FORM * form;
     int n = fields.size();
-    FIELD *field[n+1];
+    FIELD **field = (FIELD**)calloc(n+1, sizeof(FIELD*));
     ITEM ** items;
     bool upper_active = false;
     vector<string> menu_choices {"Zapisz", "Wroc"};
@@ -1200,7 +1239,7 @@ int item_form(WINDOW * window, string header, vector<string> &fields, vector<str
     wrefresh(menu_window);
 
 //sterowanie
-    while((c=wgetch(window)) != KEY_F(1))
+    while((c=wgetch(window)))
     {
         if(upper_active)
         {
@@ -1305,6 +1344,7 @@ int item_form(WINDOW * window, string header, vector<string> &fields, vector<str
 
     for (int i=0; i<n; i++)
         free_field(field[i]);
+    delete (field);
 
     return res;
 }
